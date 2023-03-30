@@ -1,0 +1,11 @@
+{
+    "name": "tas_helper",
+    "version": "0.1.0",
+    "title": "TAS Helper",
+    "author": "",
+    "factorio_version": "1.1",
+    "dependencies": ["? base >= 1.1"],
+    "description": "Allows you to record player actions and export them to make tool-assisted speedruns."
+}
+
+

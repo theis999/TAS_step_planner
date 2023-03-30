@@ -1,0 +1,10 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 2023-03-30
+  Changes:
+    - Added changelog
+    - Added hidden settings to store the settings of the gui, so changes are applied between games
+    - Added Drop to recorded actions
+    - Added multibuild to take and put
+  Bugfixes:
+    - Fixed a problem with fast-replace crashing the game
