@@ -105,25 +105,6 @@ local function build_gui()
 
     global.elements.export_frame_close_button = add_title_bar(export_frame, {"tas_helper.export_to_ezr_title"})
 
-    --[[ add total lines flow
-    do
-        global.elements.export_total_lines = {}
-        local flow = export_frame.add{ type = "flow", direction = "vertical", name = "total_lines" }
-        local line1 = flow.add{ type = "flow", style = "tas_helper_total_lines_flow", }
-        line1.add{ type = "label", style = "tas_helper_total_lines_label", caption = {"", {"tas_helper.export_total_lines_saved"}, " [img=info] : "}, tooltip = {"tas_helper.export_total_lines_saved_tooltip"}, }
-        global.elements.export_total_lines.saved_textfield = line1.add{ type = "textfield", style = "tas_helper_invalid_value_number_textfield", numeric = true, }
-        local line2 = flow.add{ type = "flow", style = "tas_helper_total_lines_flow", }
-        line2.add{ type = "label", style = "tas_helper_total_lines_label", caption = {"", {"tas_helper.export_total_lines_exported"}, ": "}, }
-        local filler = line2.add{ type = "empty-widget", }
-        filler.style.width = 3
-        global.elements.export_total_lines.exported_label = line2.add{ type = "label", caption = "0" }
-        local line3 = flow.add{ type = "flow", style = "tas_helper_total_lines_flow", }
-        line3.add{ type = "label", style = "tas_helper_total_lines_label", caption = {"", {"tas_helper.export_total_lines_new"}, " [img=info] : "}, tooltip = {"tas_helper.export_total_lines_new_tooltip"}, }
-        local total_lines_new = line3.add{ type = "text-box", style = "tas_helper_number_textfield", text = "0", }
-        total_lines_new.read_only = true
-        global.elements.export_total_lines.new_textbox = total_lines_new
-    end]]
-
     local export_task_list_label = export_frame.add{ type = "label", style = "caption_label", caption = {"tas_helper.export_task_list_label"}, tooltip = {"tas_helper.export_task_list_label_tooltip"}, }
     export_task_list_label.style.top_margin = 6
 
@@ -1002,8 +983,9 @@ script.on_event(defines.events.on_player_changed_position, function(event)
                 local dist = math.sqrt((math.abs(entity.position.x - player.position.x) - (entity.bounding_box.right_bottom.x-entity.bounding_box.left_top.x))^2 + (math.abs(entity.position.y - player.position.y) - (entity.bounding_box.right_bottom.y-entity.bounding_box.left_top.y))^2)
                 if dist < 10 and player.can_reach_entity(entity) then
                     player.cursor_stack.set_stack({name = entity.ghost_name, count = 200})
-                    if player.can_build_from_cursor{position = entity.position, direction = entity.direction} and 
-                        player.build_from_cursor{position = entity.position, direction = entity.direction} 
+                    local inv = entity.ghost_type == "underground-belt" and entity.belt_to_ground_type == "output" or false
+                    if player.can_build_from_cursor{position = entity.position, direction = entity.direction} and
+                        player.build_from_cursor{position = entity.position, direction = inv and (entity.direction + 4) % 8 or entity.direction}
                     then
                         table.remove(global.ghosts, index)
                         break
