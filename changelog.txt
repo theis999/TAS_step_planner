@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 2023-06-15
+  Changes:
+    - Added Settings icon button - replacing the settings button
+    - Added Close icon button
+    - Added Icon (notebook)
+    - Changed title
+    - Changed references to EZR to FTG
+    - Changed Export button to green
+    - Added auto-select text in the export frame
+    - Changed settings frame to always spawn next to main frame
+  Bugfixes:
+    - Fixed orientation of gun turrets
+---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2023-05-01
   Bugfixes:

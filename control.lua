@@ -59,23 +59,35 @@ local function build_gui()
     -- references to 'LuaGuiElement's
     global.elements = {}
 
-    local main_frame = screen.add{ type = "frame", caption = {"tas_helper.title"}, direction = "horizontal", }
+    local main_frame = screen.add{ type = "frame", direction = "vertical", }
     global.elements.main_frame = main_frame
     main_frame.location = {settings.global.tas_step_planner_x.value, settings.global.tas_step_planner_y.value}
     main_frame.style.width = gui_width
+
+    do
+        local title_bar = main_frame.add{ type = "flow", direction = "horizontal", name = "title_bar", }
+        title_bar.drag_target = main_frame
+        title_bar.add{ type = "sprite", sprite = "tas_helper_icon"}
+        title_bar.add{ type = "label", style = "frame_title", caption = {"tas_helper.title"}, ignored_by_interaction = true, }
+        title_bar.add{ type = "empty-widget", style = "game_speed_title_bar_draggable_space", ignored_by_interaction = true, }
+        global.elements.toggle_options_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "tas_helper_settings_icon_white", hovered_sprite = "tas_helper_settings_icon_black", clicked_sprite = "tas_helper_settings_icon_black", }
+        global.elements.close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close_white", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
+    end
     
     -- start with GUI visible and shortcut toggled on / or not
-    local open = settings.global.tas_step_planner_open.value
+    local open = settings.global.tas_step_planner_open.value and true
     player.set_shortcut_toggled("tas_helper_toggle_gui", open)
     main_frame.visible = open
 
-    local actions_listbox = main_frame.add{ type = "list-box", }
+    local main_flow = main_frame.add{ type = "flow", direction = "horizontal" }
+
+    local actions_listbox = main_flow.add{ type = "list-box", }
     actions_listbox.style.width = gui_width - 135
     actions_listbox.style.minimal_height = 140
     actions_listbox.style.maximal_height = 560
     global.elements.actions_listbox = actions_listbox
 
-    local buttons_flow = main_frame.add{ type = "flow", direction = "vertical" }
+    local buttons_flow = main_flow.add{ type = "flow", direction = "vertical" }
     global.elements.buttons_flow = buttons_flow
 
     buttons_flow.add{ type = "button", name = "start_stop_recording_button", caption = start_recording_text, tooltip = {"tas_helper.record_tooltip"}, }
@@ -89,14 +101,13 @@ local function build_gui()
     buttons_flow.add{ type = "line" }
     buttons_flow.add{ type = "button", name = "add_walk_action_button", caption = {"tas_helper.add_walk_action"}, tooltip = {"tas_helper.add_walk_action_tooltip"} }
     buttons_flow.add{ type = "line" }
-    buttons_flow.add{ type = "button", name = "export_ezr_button", caption = {"tas_helper.export_ezr"}, tooltip = {"tas_helper.export_ezr_tooltip"}, }
-    buttons_flow.add{ type = "line" }
-    buttons_flow.add{ type = "button", name = "settings_button", caption = {"tas_helper.settings"}, }
+    buttons_flow.add{ type = "button", name = "export_ezr_button", style = "green_button", caption = {"tas_helper.export_ezr"}, tooltip = {"tas_helper.export_ezr_tooltip"}, }
 
     -- add title bar (from raiguard's style guide)
     local function add_title_bar(frame, title)
         local title_bar = frame.add{ type = "flow", direction = "horizontal", name = "title_bar", }
         title_bar.drag_target = frame
+        title_bar.add{ type = "sprite", sprite = "tas_helper_icon"}
         title_bar.add{ type = "label", style = "frame_title", caption = title, ignored_by_interaction = true, }
         title_bar.add{ type = "empty-widget", style = "tas_helper_title_bar_draggable_space", ignored_by_interaction = true, }
         local frame_close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close_white", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
@@ -889,7 +900,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         position = entity.position,
         entity_name = entity.name,
         entity = entity,
-        orientation = dir,
+        orientation = dir or entity.direction,
         fast_replace_group = entity.prototype.fast_replaceable_group,
         highlight_box_bounds = entity.selection_box,
     })
@@ -1331,8 +1342,10 @@ script.on_event(defines.events.on_gui_click, function(event)
         handle_add_walk_action()
     elseif element == buttons_flow.export_ezr_button then
         handle_export_ezr()
-    elseif element == buttons_flow.settings_button then
+    elseif element == global.elements.toggle_options_button then
         handle_toggle_dialog(global.elements.settings_frame)
+    elseif element == global.elements.close_button then
+        handle_toggle_gui()
     elseif element == global.elements.export_frame_close_button then
         handle_close_dialog(global.elements.export_frame)
     elseif element == global.elements.settings_frame_close_button then

@@ -1,3 +1,5 @@
+local prefix = "__TAS_step_planner__"
+local prefix_graphics = prefix .. "/graphics/"
 
 -- Styles
 local styles = data.raw["gui-style"].default
@@ -81,12 +83,31 @@ styles["tas_helper_color_textfield"] = {
     width = 60,
 }
 
+
+
 -- Sprites
 -- rotate_anticlockwise.png is just reset_white.png and rotate_clockwise.png is just rotate_anticlockwise.png flipped horizontally
 data:extend{
     { type = "sprite", name = "tas_helper_record", filename = "__TAS_step_planner__/graphics/record.png", flags = {"gui-icon"}, size = 32, scale = 0.5, },
     { type = "sprite", name = "tas_helper_rotate_anticlockwise", filename = "__TAS_step_planner__/graphics/rotate_anticlockwise.png", size = 32, scale = 0.5, mipmap_count = 2, flags = {"gui-icon"}, },
     { type = "sprite", name = "tas_helper_rotate_clockwise", filename = "__TAS_step_planner__/graphics/rotate_clockwise.png", size = 32, scale = 0.5, mipmap_count = 2, flags = {"gui-icon"}, },
+    { type = "sprite", name = "tas_helper_icon", filename = "__TAS_step_planner__/graphics/notebook.png", flags = {"gui-icon"}, size = 256, scale = 0.09, },
+    {
+        type = "sprite",
+        name = "tas_helper_settings_icon_black",
+        filename = prefix_graphics.."settings-icons.png",
+        position = { 0, 0 },
+        size = 32,
+        flags = { "icon" },
+    },
+    {
+        type = "sprite",
+        name = "tas_helper_settings_icon_white",
+        filename = prefix_graphics.."settings-icons.png",
+        position = { 32, 0 },
+        size = 32,
+        flags = { "icon" },
+    },
 }
 
 
@@ -107,8 +128,8 @@ data.raw.shortcut["tas_helper_toggle_gui"] = {
     localised_name = {"tas_helper.toggle_gui"},
     associated_control_input = "tas_helper_toggle_gui",
     icon = {
-        filename = "__TAS_step_planner__/graphics/record.png",
-        size = 32,
+        filename = "__TAS_step_planner__/graphics/notebook.png",
+        size = 256,
     },
 }
 
