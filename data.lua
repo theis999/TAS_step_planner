@@ -83,8 +83,6 @@ styles["tas_helper_color_textfield"] = {
     width = 60,
 }
 
-
-
 -- Sprites
 -- rotate_anticlockwise.png is just reset_white.png and rotate_clockwise.png is just rotate_anticlockwise.png flipped horizontally
 data:extend{
@@ -148,4 +146,4 @@ add_hotkey("tas_helper_move_up", "CONTROL + SHIFT + mouse-wheel-up", "e")
 add_hotkey("tas_helper_move_down", "CONTROL + SHIFT + mouse-wheel-down", "f")
 add_hotkey("tas_helper_delete", "DELETE", "g")
 add_hotkey("tas_helper_add_walk_action", "CONTROL + W", "h")
-
+add_hotkey("tas_helper_export", "CONTROL + E", "i")

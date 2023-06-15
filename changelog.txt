@@ -10,6 +10,7 @@ Date: 2023-06-15
     - Changed Export button to green
     - Added auto-select text in the export frame
     - Changed settings frame to always spawn next to main frame
+    - Added shortcut to export
   Bugfixes:
     - Fixed orientation of gun turrets
 ---------------------------------------------------------------------------------------------------

@@ -69,7 +69,7 @@ local function build_gui()
         title_bar.drag_target = main_frame
         title_bar.add{ type = "sprite", sprite = "tas_helper_icon"}
         title_bar.add{ type = "label", style = "frame_title", caption = {"tas_helper.title"}, ignored_by_interaction = true, }
-        title_bar.add{ type = "empty-widget", style = "game_speed_title_bar_draggable_space", ignored_by_interaction = true, }
+        title_bar.add{ type = "empty-widget", style = "tas_helper_title_bar_draggable_space", ignored_by_interaction = true, }
         global.elements.toggle_options_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "tas_helper_settings_icon_white", hovered_sprite = "tas_helper_settings_icon_black", clicked_sprite = "tas_helper_settings_icon_black", }
         global.elements.close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close_white", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
     end
@@ -1422,6 +1422,7 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(event)
 end)
 
 script.on_event("tas_helper_toggle_gui", handle_toggle_gui)
+script.on_event("tas_helper_export", handle_export_ezr)
 script.on_event("tas_helper_toggle_recording", function()
     local player = game.get_player(1)
     player.play_sound{ path = "utility/gui_click", }
@@ -1447,4 +1448,3 @@ script.on_event(defines.events.on_lua_shortcut, function(event)
         handle_toggle_gui()
     end
 end)
-
