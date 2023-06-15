@@ -6,6 +6,15 @@ data:extend(
     {
         {
             type = "int-setting",
+            name = prefix.."gui-width",
+            setting_type = "startup",
+            default_value = 375,
+            minimum_value = 240,
+            maximum_value = 800,
+            order = "s0",
+        },
+        {
+            type = "int-setting",
             name = prefix.."x",
             setting_type = "runtime-global",
             default_value = 1250,

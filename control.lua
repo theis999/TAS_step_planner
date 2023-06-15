@@ -5,6 +5,9 @@ local localised_item_names_en = require "src.items"
 local localised_recipe_names_en = require "src.recipes"
 local localised_technology_names_en = require "src.technologies"
 
+local prefix = "tas_step_planner_"
+local gui_width = settings.startup[prefix.."gui-width"].value
+
 -- constants
 local start_recording_text = {"", {"tas_helper.record"}, "[img=tas_helper_record]"}
 local stop_recording_text = {"", {"tas_helper.pause"}, "[img=utility/pause]"}
@@ -59,6 +62,7 @@ local function build_gui()
     local main_frame = screen.add{ type = "frame", caption = {"tas_helper.title"}, direction = "horizontal", }
     global.elements.main_frame = main_frame
     main_frame.location = {settings.global.tas_step_planner_x.value, settings.global.tas_step_planner_y.value}
+    main_frame.style.width = gui_width
     
     -- start with GUI visible and shortcut toggled on / or not
     local open = settings.global.tas_step_planner_open.value
@@ -66,7 +70,7 @@ local function build_gui()
     main_frame.visible = open
 
     local actions_listbox = main_frame.add{ type = "list-box", }
-    actions_listbox.style.width = 240
+    actions_listbox.style.width = gui_width - 135
     actions_listbox.style.minimal_height = 140
     actions_listbox.style.maximal_height = 560
     global.elements.actions_listbox = actions_listbox
@@ -1240,9 +1244,23 @@ end
 
 local function handle_open_dialog(frame)
     local player = game.get_player(1)
+    if not player then return end
+
     frame.visible = true
     frame.bring_to_front()
     player.opened = frame
+
+    local settings_window_width = 290
+
+    local location = global.elements.main_frame.location
+    if location.x + math.floor((gui_width + settings_window_width) * player.display_scale) < player.display_resolution.width then
+        -- position settings to the right of the helper window
+        location.x = location.x + math.floor(gui_width * player.display_scale)
+    else
+        -- position settings to the left
+        location.x = location.x - math.floor(settings_window_width * player.display_scale)
+    end
+    global.elements.settings_frame.location = location
 end
 
 local function handle_close_dialog(frame)
