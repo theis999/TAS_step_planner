@@ -1280,6 +1280,9 @@ end
 local function handle_export_ezr()
     local num_lines = do_export_to_textbox()
     handle_open_dialog(global.elements.export_frame)
+    local textbox = global.elements.export_textbox
+    textbox.focus()
+    textbox.select_all()
 end
 
 script.on_event(defines.events.on_gui_closed, function(event)
