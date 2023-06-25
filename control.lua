@@ -1119,7 +1119,7 @@ end
 
 local function check_for_setting_changes(entity, last_info, info)
     -- check for certain changes on 'entity' using the previous settings ('last_info') and the new settings ('info')
-    if info.recipe ~= last_info.recipe and global.elements.settings.capture_recipe.state then
+    if info.recipe and info.recipe ~= last_info.recipe and global.elements.settings.capture_recipe.state then
         local keyword = info.recipe and {"tas_helper.keyword_set_recipe", info.recipe} or {"tas_helper.keyword_clear_recipe"}
         add_action({"tas_helper.description_set_setting", keyword, entity_to_string(entity)}, {
             type = "set_recipe",
