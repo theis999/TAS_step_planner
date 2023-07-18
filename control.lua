@@ -169,11 +169,11 @@ local function build_gui()
         settings.add{ type = "checkbox", caption = "Set filter", state = setting("filter"), name = "capture_filter_inserter" }
         settings.add{ type = "checkbox", caption = "Research technology", state = setting("research"), name = "capture_research" }
 
-        settings.add{ type = "line" }
-        settings.add{ type = "checkbox", caption = "Auto-build ghost", state = true, name = "capture_ghost" }
-
         --change prefix
         prefix = "tas_step_planner_other_"
+
+        settings.add{ type = "line" }
+        settings.add{ type = "checkbox", caption = "Auto-build ghost", state = setting("capture_ghost"), name = "capture_ghost" }
 
         settings.add{ type = "line" }
         settings.add{ type = "label", style = "caption_label", caption = "Other settings", }
