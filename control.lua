@@ -734,7 +734,7 @@ local function handle_fast_transfer_from_player(event)
     end
     local prev_inventory_contents = global.main_inventory_contents
     local item_name = prev_cursor_contents.name
-    local prev_count = prev_cursor_contents.count + (prev_inventory_contents[item_name] or 0)
+    local prev_count = prev_cursor_contents.count + (prev_inventory_contents ~= nil and prev_inventory_contents[item_name] or 0)
 
     local cursor_stack = player.cursor_stack
     if cursor_stack and cursor_stack.valid_for_read and cursor_stack.name ~= item_name then
@@ -814,8 +814,9 @@ local function handle_fast_transfer_to_player(event)
 
     local main_inventory = player.get_main_inventory()
     local prev = global.main_inventory_contents
+
     for item_name, count in pairs(main_inventory.get_contents()) do
-        local prev_count = prev[item_name] or 0
+        local prev_count = prev ~= nil and prev[item_name] or 0
         if count > prev_count then
             local transfer_count = count - prev_count
 
