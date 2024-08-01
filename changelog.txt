@@ -2,6 +2,7 @@
 Version: 0.4.5
 Date: ????
   Changes:
+    - Putting ammo in car will now default to the ammo inventory instead of cargo inventory.
 ---------------------------------------------------------------------------------------------------
 Version: 0.4.4
 Date: 2024-08-01

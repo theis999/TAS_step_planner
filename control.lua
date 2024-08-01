@@ -822,6 +822,8 @@ local function handle_fast_transfer_from_player(event)
             inventory = "Modules"
         end
         -- otherwise, ??? don't know which inventory this module goes in
+    elseif entity.type == "car" and game.item_prototypes[item_name].type == "ammo" then
+        inventory = "Ammo 1"
     else
         -- assume that the correct inventory is defines.inventory.assembling_machine_input
         inventory = "Input"
