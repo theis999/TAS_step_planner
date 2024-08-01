@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.4
+Date: 2024-08-01
+  Changes:
+    - Added <half> put & take override amount settings. Allowing for differentiated behavior for right & left clicking.
+    - Added Equip & enter to registered action types.
+    - Added vehicle modifier to take & put actions that target a "Car". Requires FTG 0.5.4.
+    - Changed position values to be truncated to 2nd decimal instead of the 6th decimal.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2023-09-22
   Changes:

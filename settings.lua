@@ -136,6 +136,22 @@ data:extend(
             order = "a12",
             hidden = true,
         },
+        {
+            type = "bool-setting",
+            name = prefix_action.."equip",
+            setting_type = "runtime-global",
+            default_value = true,
+            order = "a13",
+            hidden = true,
+        },
+        {
+            type = "bool-setting",
+            name = prefix_action.."enter",
+            setting_type = "runtime-global",
+            default_value = true,
+            order = "a15",
+            hidden = true,
+        },
 
         -- capture_ghost
 
@@ -176,6 +192,22 @@ data:extend(
         },
         {
             type = "bool-setting",
+            name = prefix_other.."always_put_half_amount_bool",
+            setting_type = "runtime-global",
+            default_value = true,
+            order = "o3a",
+            hidden = true,
+        },
+        {
+            type = "int-setting",
+            name = prefix_other.."always_put_half_amount_value",
+            setting_type = "runtime-global",
+            default_value = 0,
+            order = "o4a",
+            hidden = true,
+        },
+        {
+            type = "bool-setting",
             name = prefix_other.."always_take_amount_bool",
             setting_type = "runtime-global",
             default_value = true,
@@ -188,6 +220,22 @@ data:extend(
             setting_type = "runtime-global",
             default_value = 0,
             order = "o6",
+            hidden = true,
+        },
+        {
+            type = "bool-setting",
+            name = prefix_other.."always_take_half_amount_bool",
+            setting_type = "runtime-global",
+            default_value = true,
+            order = "o5a",
+            hidden = true,
+        },
+        {
+            type = "int-setting",
+            name = prefix_other.."always_take_half_amount_value",
+            setting_type = "runtime-global",
+            default_value = 0,
+            order = "o6a",
             hidden = true,
         },
         {

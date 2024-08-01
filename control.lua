@@ -168,6 +168,8 @@ local function build_gui()
         settings.add{ type = "checkbox", caption = "Set priority", state = setting("priority"), name = "capture_splitter" }
         settings.add{ type = "checkbox", caption = "Set filter", state = setting("filter"), name = "capture_filter_inserter" }
         settings.add{ type = "checkbox", caption = "Research technology", state = setting("research"), name = "capture_research" }
+        settings.add{ type = "checkbox", caption = "Equip", state = setting("equip"), name = "capture_equip" }
+        settings.add{ type = "checkbox", caption = "Enter", state = setting("enter"), name = "capture_enter" }
 
         --change prefix
         prefix = "tas_step_planner_other_"
@@ -178,16 +180,29 @@ local function build_gui()
         settings.add{ type = "line" }
         settings.add{ type = "label", style = "caption_label", caption = "Other settings", }
         settings.add{ type = "checkbox", caption = "Always add action to end of list [img=info]", tooltip = "If this is unchecked, actions will be added after the currently selected action.", state = setting("always_add_to_end"), name = "always_add_to_end" }
+        
         settings.add{ type = "flow", direction = "horizontal", name = "always_put_amount", }
         settings.always_put_amount.add{ type = "checkbox", caption = "Always put amount [img=info]: ", tooltip = "Always record this amount for 'Put' actions.\nSet to 0 for 'Put all'.", state = setting("always_put_amount_bool"), name = "checkbox" }
         settings.always_put_amount.add{ type = "empty-widget", }.style.horizontally_stretchable = true
         settings.always_put_amount.add{ type = "textfield", style = "very_short_number_textfield", text = setting("always_put_amount_value"), numeric = true, name = "textfield", }
         settings.always_put_amount.textfield.style.horizontal_align = "right"
+        settings.add{ type = "flow", direction = "horizontal", name = "always_put_half", }
+        settings.always_put_half.add{ type = "checkbox", caption = "Always put half [img=info]: ", tooltip = "Always record this amount for 'Put' half actions.\nSet to 0 for 'Put all'.", state = setting("always_put_half_amount_bool"), name = "checkbox" }
+        settings.always_put_half.add{ type = "empty-widget", }.style.horizontally_stretchable = true
+        settings.always_put_half.add{ type = "textfield", style = "very_short_number_textfield", text = setting("always_put_half_amount_value"), numeric = true, name = "textfield", }
+        settings.always_put_half.textfield.style.horizontal_align = "right"
+
         settings.add{ type = "flow", direction = "horizontal", name = "always_take_amount", }
         settings.always_take_amount.add{ type = "checkbox", caption = "Always take amount [img=info]: ", tooltip = "Always record this amount for 'Take' actions.\nSet to 0 for 'Take all'.", state = setting("always_take_amount_bool"), name = "checkbox" }
         settings.always_take_amount.add{ type = "empty-widget", }.style.horizontally_stretchable = true
         settings.always_take_amount.add{ type = "textfield", style = "very_short_number_textfield", text = setting("always_take_amount_value"), numeric = true, name = "textfield", }
         settings.always_take_amount.textfield.style.horizontal_align = "right"
+        settings.add{ type = "flow", direction = "horizontal", name = "always_take_half", }
+        settings.always_take_half.add{ type = "checkbox", caption = "Always take half [img=info]: ", tooltip = "Always record this amount for 'Take' half actions.\nSet to 0 for 'Take all'.", state = setting("always_take_half_amount_bool"), name = "checkbox" }
+        settings.always_take_half.add{ type = "empty-widget", }.style.horizontally_stretchable = true
+        settings.always_take_half.add{ type = "textfield", style = "very_short_number_textfield", text = setting("always_take_half_amount_value"), numeric = true, name = "textfield", }
+        settings.always_take_half.textfield.style.horizontal_align = "right"
+        
         settings.add{ type = "checkbox", caption = "Combine related actions [img=info]", tooltip = "When adding an action, merge it with the previous action if possible.\nFor example, crafting the same item twice will be merged and mining then building belt (which happens automatically when belt dragging and rotating) will be merged.", state = setting("combine_actions"), name = "combine_actions", }
 
         settings.add{ type = "flow", direction = "horizontal", name = "max_build_size", }
@@ -216,14 +231,20 @@ local function build_gui()
         priority = global.elements.settings.capture_splitter,
         filter = global.elements.settings.capture_filter_inserter,
         research = global.elements.settings.capture_research,
+        equip = global.elements.settings.capture_equip,
+        enter = global.elements.settings.capture_enter,
     }
     global.other_types = {
         capture_ghost = global.elements.settings.capture_ghost,
         always_add_to_end = global.elements.settings.always_add_to_end,
         always_put_amount_bool = global.elements.settings.always_put_amount.checkbox,
         always_put_amount_value = global.elements.settings.always_put_amount.textfield,
+        always_put_half_amount_bool = global.elements.settings.always_put_half.checkbox,
+        always_put_half_amount_value = global.elements.settings.always_put_half.textfield,
         always_take_amount_bool = global.elements.settings.always_take_amount.checkbox,
         always_take_amount_value = global.elements.settings.always_take_amount.textfield,
+        always_take_half_amount_bool = global.elements.settings.always_take_half.checkbox,
+        always_take_half_amount_value = global.elements.settings.always_take_half.textfield,
         combine_actions = global.elements.settings.combine_actions,
         max_build_size = global.elements.settings.max_build_size.textfield,
         color_export = global.elements.settings.color_export.textfield,
@@ -252,13 +273,13 @@ end
 
 local function ezr_action_to_string(action)
     local function make_string(info)
-        local x = info.position and string.format("%.6f", info.position.x) or ""
-        local y = info.position and string.format("%.6f", info.position.y) or ""
-        local units = info.units and (tonumber(info.units) and string.format("%.6f", info.units) or info.units) or ""
+        local x = info.position and string.format("%.2f", info.position.x + 0.005) or ""
+        local y = info.position and string.format("%.2f", info.position.y + 0.005) or ""
+        local units = info.units and (tonumber(info.units) and string.format("%.2f", info.units + 0.005) or info.units) or ""
         local size = info.size and string.format("%d", info.size) or ""
         local amount = info.amount and string.format("%d", info.amount) or ""
         local colour = global.elements.settings.color_export.textfield.text or ""
-        return string.format("%s;%s;%s;%s;%s;%s;%s;%s;%s;;%s;", info.task, x, y, units, info.item or "", info.orientation or "", info.direction or "", size, amount, colour)
+        return string.format("%s;%s;%s;%s;%s;%s;%s;%s;%s;;%s;%s;", info.task, x, y, units, info.item or "", info.orientation or "", info.direction or "", size, amount, colour, info.modifier or "")
     end
 
     if action.type == "put" then
@@ -271,6 +292,7 @@ local function ezr_action_to_string(action)
             direction = ezr_build_orientation_names[action.direction or defines.direction.north],
             size = action.size or 1,
             amount = action.amount or 1,
+            modifier = action.modifier,
         }
     elseif action.type == "take" then
         return make_string{
@@ -282,6 +304,7 @@ local function ezr_action_to_string(action)
             direction = ezr_build_orientation_names[action.direction or defines.direction.north],
             size = action.size or 1,
             amount = action.amount or 1,
+            modifier = action.modifier,
         }
     elseif action.type == "build" then
         return make_string{
@@ -394,6 +417,19 @@ local function ezr_action_to_string(action)
             task = "Drop",
             item = localised_item_names_en[action.item_name],
             position = action.position,
+        }
+
+    elseif action.type == "enter" then
+        return make_string{
+            task = "Enter",
+        }
+
+    elseif action.type == "equip" then
+        return make_string{
+            task = "Equip",
+            item = localised_item_names_en[action.item_name],
+            units = action.count,
+            orientation = action.orientation,
         }
     else
         game.print("Error: Tried to export unknown action type: " .. (action.type or "nil"))
@@ -751,7 +787,7 @@ local function handle_fast_transfer_from_player(event)
     end
 
     -- check 'always put amount' settings
-    local always_put_amount = global.elements.settings.always_put_amount
+    local always_put_amount = event.is_split and global.elements.settings.always_put_half or global.elements.settings.always_put_amount
     if always_put_amount.checkbox.state then
         transfer_count = tonumber(always_put_amount.textfield.text) or 0
     end
@@ -791,6 +827,11 @@ local function handle_fast_transfer_from_player(event)
         inventory = "Input"
     end
 
+    local modifier
+    if entity.type == "car" then --TODO handle other vehicles
+        modifier = "vehicle"
+    end
+
     if inventory then
         local transfer_count_description = transfer_count == 0 and "all" or transfer_count .. " x"
         add_action({"tas_helper.description_put", transfer_count_description, item_name, entity_to_string(entity)}, {
@@ -800,6 +841,7 @@ local function handle_fast_transfer_from_player(event)
             item_name = item_name,
             count = transfer_count,
             inventory = inventory,
+            modifier = modifier,
             highlight_box_bounds = entity.selection_box,
         })
     else
@@ -807,6 +849,8 @@ local function handle_fast_transfer_from_player(event)
     end
 end
 
+---comment
+---@param event EventData.on_player_fast_transferred
 local function handle_fast_transfer_to_player(event)
     local player = game.get_player(1)
     if player == nil or not global.elements.settings.capture_take.state then return end
@@ -814,13 +858,19 @@ local function handle_fast_transfer_to_player(event)
 
     local main_inventory = player.get_main_inventory()
     local prev = global.main_inventory_contents
+    if not main_inventory then return end
+
+    local modifier
+    if entity.type == "car" then --TODO handle other vehicles
+        modifier = "vehicle"
+    end
 
     for item_name, count in pairs(main_inventory.get_contents()) do
         local prev_count = prev ~= nil and prev[item_name] or 0
         if count > prev_count then
             local transfer_count = count - prev_count
 
-            local always_take_amount = global.elements.settings.always_take_amount
+            local always_take_amount = event.is_split and global.elements.settings.always_take_half or global.elements.settings.always_take_amount
             if always_take_amount.checkbox.state then
                 transfer_count = tonumber(always_take_amount.textfield.text) or 0
             end
@@ -854,6 +904,7 @@ local function handle_fast_transfer_to_player(event)
                 -- works with roboports I guess
                 inventory = "Wreck"
             end
+
             if inventory then
                 local transfer_count_description = transfer_count == 0 and "all" or transfer_count .. " x"
                 add_action({"tas_helper.description_take", transfer_count_description, item_name, entity_to_string(entity)}, {
@@ -863,6 +914,7 @@ local function handle_fast_transfer_to_player(event)
                     item_name = item_name,
                     count = transfer_count,
                     inventory = inventory,
+                    modifier = modifier,
                     highlight_box_bounds = entity.selection_box,
                 })
             else
@@ -1100,6 +1152,146 @@ script.on_event(defines.events.on_player_dropped_item, function (event)
         item_name = item.stack.name,
         highlight_box_bounds = item.selection_box,
     })
+end)
+
+script.on_event(defines.events.on_player_driving_changed_state, function(event)
+    if not global.elements.settings.capture_enter.state then return end
+    local _player, vehicle = game.get_player(event.player_index), event.entity
+    if not vehicle or not _player then return end
+    local vehicle_string = vehicle and "[item="..vehicle.name.."]" or "vehicle"
+    add_action({"tas_helper.description_enter", _player.driving and "entering "..vehicle_string or "leaving "..vehicle_string}, {
+        type = "enter",
+        entity = vehicle,
+        highlight_box_bounds = vehicle.selection_box,
+    })
+end)
+
+script.on_event(defines.events.on_player_ammo_inventory_changed, function(event)
+    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    local _player = game.get_player(event.player_index)
+    if not _player or not _player.character then return end
+    local inventory = _player.character.get_inventory(defines.inventory.character_ammo)
+    if not global.ammo then
+        global.ammo = {
+            inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0},
+            inventory[2].valid_for_read and {name = inventory[2].name, count = inventory[2].count} or {name = "none", count = 0},
+            inventory[3].valid_for_read and {name = inventory[3].name, count = inventory[3].count} or {name = "none", count = 0},
+        }
+        return
+    end
+    
+    for index = 1, 3 do
+        local slot = inventory[index]
+        if slot.valid_for_read then
+            if slot.name ~= global.ammo[index].name or
+                slot.count > global.ammo[index].count or
+                slot.count < global.ammo[index].count - 1 -- event triggers on shooting a full mag, so this prevents triggering on shooting
+            then
+                add_action({"tas_helper.description_equip", slot.name, "ammo"..index, slot.count}, {
+                    type = "equip",
+                    item_name = slot.name,
+                    count = slot.count,
+                    orientation = "Ammo "..index,
+                })
+            end
+            global.ammo[index].name = slot.name
+            global.ammo[index].count = slot.count
+        else
+            if global.ammo[index].name ~= "none" then
+                add_action({"tas_helper.description_unequip", "ammo"..index}, {
+                    type = "equip",
+                    item_name = "",
+                    count = 0,
+                    orientation = "Ammo "..index,
+                })
+            end
+            global.ammo[index].name = "none"
+            global.ammo[index].count = 0
+        end
+    end
+end)
+
+script.on_event(defines.events.on_player_gun_inventory_changed, function(event)
+    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    local _player = game.get_player(event.player_index)
+    if not _player or not _player.character then return end
+    local inventory = _player.character.get_inventory(defines.inventory.character_guns)
+    if not global.weapon then
+        global.weapon = {
+            inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0},
+            inventory[2].valid_for_read and {name = inventory[2].name, count = inventory[2].count} or {name = "none", count = 0},
+            inventory[3].valid_for_read and {name = inventory[3].name, count = inventory[3].count} or {name = "none", count = 0},
+        }
+        return
+    end
+    
+    
+    for index = 1, 3 do
+        local slot = inventory[index]
+        if slot.valid_for_read then
+            if slot.name ~= global.weapon[index].name or
+                slot.count ~= global.weapon[index].count
+            then
+                add_action({"tas_helper.description_equip", slot.name, "weapon"..index, slot.count}, {
+                    type = "equip",
+                    item_name = slot.name,
+                    count = slot.count,
+                    orientation = "Weapon "..index,
+                })
+            end
+            global.weapon[index].name = slot.name
+            global.weapon[index].count = slot.count
+        else
+            if global.weapon[index].name ~= "none" then
+                add_action({"tas_helper.description_unequip", "weapon"..index}, {
+                    type = "equip",
+                    item_name = "",
+                    count = 0,
+                    orientation = "Weapon "..index,
+                })
+            end
+            global.weapon[index].name = "none"
+            global.weapon[index].count = 0
+        end
+    end
+end)
+
+script.on_event(defines.events.on_player_armor_inventory_changed, function(event)
+    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    local _player = game.get_player(event.player_index)
+    if not _player or not _player.character then return end
+    local inventory = _player.character.get_inventory(defines.inventory.character_armor)
+    if not global.armor then
+        global.armor = inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0}
+        return
+    end
+    local slot = inventory[1]
+    if slot.valid_for_read then
+        if slot.name ~= global.armor.name or
+            slot.count > global.armor.count or
+            slot.count < global.armor.count - 1
+        then
+            add_action({"tas_helper.description_equip", slot.name, "armor", slot.count}, {
+                type = "equip",
+                item_name = slot.name,
+                count = slot.count,
+                orientation = "Armor",
+            })
+        end
+        global.armor.name = slot.name
+        global.armor.count = slot.count
+    else
+        if global.armor.name ~= "none" then
+            add_action({"tas_helper.description_unequip", "armor"}, {
+                type = "equip",
+                item_name = "",
+                count = 0,
+                orientation = "Armor",
+            })
+        end
+        global.armor.name = "none"
+        global.armor.count = 0
+    end
 end)
 
 local function get_entity_info(entity)
@@ -1372,12 +1564,17 @@ end)
 
 script.on_event(defines.events.on_gui_checked_state_changed, function(event)
     do -- Update GUI
-        local settings = global.elements.settings
-        local element = event.element
-        if element == settings.always_put_amount.checkbox then
+        local settings, element = global.elements.settings, event.element
+        if not element then
+            -- Do nothing
+        elseif element == settings.always_put_amount.checkbox then
             settings.always_put_amount.textfield.enabled = element.state
+        elseif element == settings.always_put_half.checkbox then
+            settings.always_put_half.textfield.enabled = element.state
         elseif element == settings.always_take_amount.checkbox then
             settings.always_take_amount.textfield.enabled = element.state
+        elseif element == settings.always_take_half.checkbox then
+            settings.always_take_half.textfield.enabled = element.state
         end
     end
 
