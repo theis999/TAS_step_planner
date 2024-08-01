@@ -49,6 +49,7 @@ Here are the actions that are captured:
 * Researching a technology
 * Crafting
 * Walking
+* Equip
 
 ####The following are *not captured*:
 * Pick up/drop item (i.e. pressing 'F' or 'Z')
