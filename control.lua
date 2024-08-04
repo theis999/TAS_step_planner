@@ -273,9 +273,9 @@ end
 
 local function ezr_action_to_string(action)
     local function make_string(info)
-        local x = info.position and string.format("%.2f", info.position.x + 0.005) or ""
-        local y = info.position and string.format("%.2f", info.position.y + 0.005) or ""
-        local units = info.units and (tonumber(info.units) and string.format("%.2f", info.units + 0.005) or info.units) or ""
+        local x = info.position and string.format("%.2f", info.position.x) or ""
+        local y = info.position and string.format("%.2f", info.position.y) or ""
+        local units = info.units and (tonumber(info.units) and string.format("%.2f", info.units) or info.units) or ""
         local size = info.size and string.format("%d", info.size) or ""
         local amount = info.amount and string.format("%d", info.amount) or ""
         local colour = global.elements.settings.color_export.textfield.text or ""
