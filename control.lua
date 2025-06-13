@@ -420,7 +420,7 @@ local function try_merging_actions(prev_action, action)
             highlight_box_bounds = {{action.position.x - 0.5, action.position.y - 0.5}, {action.position.x + 0.5, action.position.y + 0.5}},
         }
         return "merge", new_description, new_action
-        
+
     --combine mine <-> build on when it could be fast-replace
     elseif prev_action.type == "mine" and action.type == "build" and
             prev_action.position.x == action.position.x and prev_action.position.y == action.position.y and
@@ -699,16 +699,11 @@ local function handle_fast_transfer_from_player(event)
         end
     elseif entity.type == "mining-drill" then
         inventory = "Modules"
-    elseif chest_list[entity.name] ~= nil then
-        inventory = "Chest"
     elseif entity.type == "container" then
-        inventory = "Wreck"
+        inventory = chest_list[entity.name] ~= nil and "Chest" or "Wreck"
     elseif entity.type == "beacon" then
-        -- Beacon input inventory is defines.inventory.beacon_modules but EZR doesn't handle
-        -- beacon module inventory correctly so you have to use Wreck instead (which maps to the
-        -- same integer as beacon_modules)
-        inventory = "Wreck"
-    elseif game.item_prototypes[item_name].type == "module" then
+        inventory = "Modules"
+    elseif prototypes.item[item_name].type == "module" then
         local recipe = entity.type == "assembling-machine" and entity.get_recipe() or nil
         local ingredients = recipe and recipe.ingredients
         if ingredients and ingredients_contains(ingredients, item_name) then
@@ -717,7 +712,7 @@ local function handle_fast_transfer_from_player(event)
             inventory = "Modules"
         end
         -- otherwise, ??? don't know which inventory this module goes in
-    elseif entity.type == "car" and game.item_prototypes[item_name].type == "ammo" then
+    elseif entity.type == "car" and prototypes.item[item_name].type == "ammo" then
         inventory = "Ammo 1"
     else
         -- assume that the correct inventory is defines.inventory.assembling_machine_input
