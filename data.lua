@@ -125,10 +125,8 @@ data.raw.shortcut["tas_helper_toggle_gui"] = {
     action = "lua",
     localised_name = {"tas_helper.toggle_gui"},
     associated_control_input = "tas_helper_toggle_gui",
-    icon = {
-        filename = "__TAS_step_planner__/graphics/notebook.png",
-        size = 256,
-    },
+    icon = "__TAS_step_planner__/graphics/notebook.png",
+    small_icon = "__TAS_step_planner__/graphics/notebook.png",
 }
 
 -- Hotkeys

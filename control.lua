@@ -11,7 +11,7 @@ local gui_width = settings.startup[prefix.."gui-width"].value
 -- constants
 local start_recording_text = {"", {"tas_helper.record"}, "[img=tas_helper_record]"}
 local stop_recording_text = {"", {"tas_helper.pause"}, "[img=utility/pause]"}
-local ezr_build_orientation_names = {
+local ftg_build_orientation_names = {
     [defines.direction.north] = "North",
     [defines.direction.east] = "East",
     [defines.direction.south] = "South",
@@ -23,11 +23,11 @@ local chest_list = {
     ["wooden-chest"] = 1,
     ["iron-chest"] = 1,
     ["steel-chest"] = 1,
-    ["logistic-chest-active-provider"] = 1,
-    ["logistic-chest-passive-provider"] = 1,
-    ["logistic-chest-storage"] = 1,
-    ["logistic-chest-buffer"] = 1,
-    ["logistic-chest-requester"] = 1,
+    ["active-provider-chest"] = 1,
+    ["passive-provider-chest"] = 1,
+    ["chest-storage-chest"] = 1,
+    ["buffer-chest"] = 1,
+    ["requester-chest"] = 1,
 }
 
 local function position_to_string(position)
@@ -57,10 +57,10 @@ local function build_gui()
     local screen = player.gui.screen
 
     -- references to 'LuaGuiElement's
-    global.elements = {}
+    storage.elements = {}
 
     local main_frame = screen.add{ type = "frame", direction = "vertical", }
-    global.elements.main_frame = main_frame
+    storage.elements.main_frame = main_frame
     main_frame.location = {settings.global.tas_step_planner_x.value, settings.global.tas_step_planner_y.value}
     main_frame.style.width = gui_width
 
@@ -70,8 +70,8 @@ local function build_gui()
         title_bar.add{ type = "sprite", sprite = "tas_helper_icon"}
         title_bar.add{ type = "label", style = "frame_title", caption = {"tas_helper.title"}, ignored_by_interaction = true, }
         title_bar.add{ type = "empty-widget", style = "tas_helper_title_bar_draggable_space", ignored_by_interaction = true, }
-        global.elements.toggle_options_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "tas_helper_settings_icon_white", hovered_sprite = "tas_helper_settings_icon_black", clicked_sprite = "tas_helper_settings_icon_black", }
-        global.elements.close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close_white", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
+        storage.elements.toggle_options_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "tas_helper_settings_icon_white", hovered_sprite = "tas_helper_settings_icon_black", clicked_sprite = "tas_helper_settings_icon_black", }
+        storage.elements.close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
     end
     
     -- start with GUI visible and shortcut toggled on / or not
@@ -85,13 +85,13 @@ local function build_gui()
     actions_listbox.style.width = gui_width - 135
     actions_listbox.style.minimal_height = 140
     actions_listbox.style.maximal_height = 560
-    global.elements.actions_listbox = actions_listbox
+    storage.elements.actions_listbox = actions_listbox
 
     local buttons_flow = main_flow.add{ type = "flow", direction = "vertical" }
-    global.elements.buttons_flow = buttons_flow
+    storage.elements.buttons_flow = buttons_flow
 
     buttons_flow.add{ type = "button", name = "start_stop_recording_button", caption = start_recording_text, tooltip = {"tas_helper.record_tooltip"}, }
-    global.recording = false
+    storage.recording = false
     buttons_flow.add{ type = "line" }
     buttons_flow.add{ type = "button", name = "prev_button", caption = {"tas_helper.previous"}, tooltip = {"tas_helper.previous_tooltip"}, }
     buttons_flow.add{ type = "button", name = "next_button", caption = {"tas_helper.next"}, tooltip = {"tas_helper.next_tooltip"}, }
@@ -101,7 +101,7 @@ local function build_gui()
     buttons_flow.add{ type = "line" }
     buttons_flow.add{ type = "button", name = "add_walk_action_button", caption = {"tas_helper.add_walk_action"}, tooltip = {"tas_helper.add_walk_action_tooltip"} }
     buttons_flow.add{ type = "line" }
-    buttons_flow.add{ type = "button", name = "export_ezr_button", style = "green_button", caption = {"tas_helper.export_ezr"}, tooltip = {"tas_helper.export_ezr_tooltip"}, }
+    buttons_flow.add{ type = "button", name = "export_ftg_button", style = "green_button", caption = {"tas_helper.export_ftg"}, tooltip = {"tas_helper.export_ftg_tooltip"}, }
 
     -- add title bar (from raiguard's style guide)
     local function add_title_bar(frame, title)
@@ -110,21 +110,21 @@ local function build_gui()
         title_bar.add{ type = "sprite", sprite = "tas_helper_icon"}
         title_bar.add{ type = "label", style = "frame_title", caption = title, ignored_by_interaction = true, }
         title_bar.add{ type = "empty-widget", style = "tas_helper_title_bar_draggable_space", ignored_by_interaction = true, }
-        local frame_close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close_white", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
+        local frame_close_button = title_bar.add{ type = "sprite-button", style = "frame_action_button", sprite = "utility/close", hovered_sprite = "utility/close_black", clicked_sprite = "utility/close_black", }
         return frame_close_button
     end
 
     local export_frame = screen.add{ type = "frame", direction = "vertical", visible = false, }
-    global.elements.export_frame = export_frame
+    storage.elements.export_frame = export_frame
     export_frame.force_auto_center()
 
-    global.elements.export_frame_close_button = add_title_bar(export_frame, {"tas_helper.export_to_ezr_title"})
+    storage.elements.export_frame_close_button = add_title_bar(export_frame, {"tas_helper.export_to_ftg_title"})
 
     local export_task_list_label = export_frame.add{ type = "label", style = "caption_label", caption = {"tas_helper.export_task_list_label"}, tooltip = {"tas_helper.export_task_list_label_tooltip"}, }
     export_task_list_label.style.top_margin = 6
 
     local export_textbox = export_frame.add{ type = "text-box", style = "tas_helper_export_textbox", }
-    global.elements.export_textbox = export_textbox
+    storage.elements.export_textbox = export_textbox
     export_textbox.read_only = true
 
     local export_buttons_flow = export_frame.add{ type = "flow", name = "buttons", }
@@ -137,7 +137,7 @@ local function build_gui()
     -- add settings frame
     do
         local frame = screen.add{ type = "frame", direction = "vertical", visible = false, }
-        global.elements.settings_frame = frame
+        storage.elements.settings_frame = frame
         frame.force_auto_center()
 
         local prefix = "tas_step_planner_action_"
@@ -145,16 +145,16 @@ local function build_gui()
             return settings.global[prefix..name].value
         end
         
-        global.elements.settings_frame_close_button = add_title_bar(frame, "Settings")
+        storage.elements.settings_frame_close_button = add_title_bar(frame, "Settings")
 
         -- emulating style = "blueprint_settings_frame" with no minimal_width
         local inside_shallow_frame = frame.add{ type = "frame", style = "inside_shallow_frame", direction = "vertical", }
         inside_shallow_frame.style.top_padding = 6
         inside_shallow_frame.style.bottom_padding = 6
-        local settings = inside_shallow_frame.add{ type = "frame", style = "bordered_frame_with_extra_side_margins", direction = "vertical", }
+        local settings = inside_shallow_frame.add{ type = "frame", style = "bordered_frame", direction = "vertical", }
         settings.style.horizontally_stretchable = true
         settings.style.minimal_width = 250
-        global.elements.settings = settings
+        storage.elements.settings = settings
         settings.add{ type = "label", style = "caption_label", caption = "Action types to capture", }
         settings.add{ type = "checkbox", caption = "Walk", state = setting("walk"), name = "capture_walk" }
         settings.add{ type = "checkbox", caption = "Build", state = setting("build"), name = "capture_build" }
@@ -218,47 +218,47 @@ local function build_gui()
         settings.color_export.textfield.style.horizontal_align = "right"
     end
 
-    global.action_types = {
-        walk = global.elements.settings.capture_walk,
-        build = global.elements.settings.capture_build,
-        rotate = global.elements.settings.capture_rotate,
-        craft = global.elements.settings.capture_craft,
-        put = global.elements.settings.capture_put,
-        take = global.elements.settings.capture_take,
-        mine = global.elements.settings.capture_mine,
-        limit = global.elements.settings.capture_limit,
-        recipe = global.elements.settings.capture_recipe,
-        priority = global.elements.settings.capture_splitter,
-        filter = global.elements.settings.capture_filter_inserter,
-        research = global.elements.settings.capture_research,
-        equip = global.elements.settings.capture_equip,
-        enter = global.elements.settings.capture_enter,
+    storage.action_types = {
+        walk = storage.elements.settings.capture_walk,
+        build = storage.elements.settings.capture_build,
+        rotate = storage.elements.settings.capture_rotate,
+        craft = storage.elements.settings.capture_craft,
+        put = storage.elements.settings.capture_put,
+        take = storage.elements.settings.capture_take,
+        mine = storage.elements.settings.capture_mine,
+        limit = storage.elements.settings.capture_limit,
+        recipe = storage.elements.settings.capture_recipe,
+        priority = storage.elements.settings.capture_splitter,
+        filter = storage.elements.settings.capture_filter_inserter,
+        research = storage.elements.settings.capture_research,
+        equip = storage.elements.settings.capture_equip,
+        enter = storage.elements.settings.capture_enter,
     }
-    global.other_types = {
-        capture_ghost = global.elements.settings.capture_ghost,
-        always_add_to_end = global.elements.settings.always_add_to_end,
-        always_put_amount_bool = global.elements.settings.always_put_amount.checkbox,
-        always_put_amount_value = global.elements.settings.always_put_amount.textfield,
-        always_put_half_amount_bool = global.elements.settings.always_put_half.checkbox,
-        always_put_half_amount_value = global.elements.settings.always_put_half.textfield,
-        always_take_amount_bool = global.elements.settings.always_take_amount.checkbox,
-        always_take_amount_value = global.elements.settings.always_take_amount.textfield,
-        always_take_half_amount_bool = global.elements.settings.always_take_half.checkbox,
-        always_take_half_amount_value = global.elements.settings.always_take_half.textfield,
-        combine_actions = global.elements.settings.combine_actions,
-        max_build_size = global.elements.settings.max_build_size.textfield,
-        color_export = global.elements.settings.color_export.textfield,
+    storage.other_types = {
+        capture_ghost = storage.elements.settings.capture_ghost,
+        always_add_to_end = storage.elements.settings.always_add_to_end,
+        always_put_amount_bool = storage.elements.settings.always_put_amount.checkbox,
+        always_put_amount_value = storage.elements.settings.always_put_amount.textfield,
+        always_put_half_amount_bool = storage.elements.settings.always_put_half.checkbox,
+        always_put_half_amount_value = storage.elements.settings.always_put_half.textfield,
+        always_take_amount_bool = storage.elements.settings.always_take_amount.checkbox,
+        always_take_amount_value = storage.elements.settings.always_take_amount.textfield,
+        always_take_half_amount_bool = storage.elements.settings.always_take_half.checkbox,
+        always_take_half_amount_value = storage.elements.settings.always_take_half.textfield,
+        combine_actions = storage.elements.settings.combine_actions,
+        max_build_size = storage.elements.settings.max_build_size.textfield,
+        color_export = storage.elements.settings.color_export.textfield,
     }
 end
 
 local function update_highlight_box()
-    if global.current_highlight_box then
-        global.current_highlight_box.destroy()
+    if storage.current_highlight_box then
+        storage.current_highlight_box.destroy()
     end
 
-    local index = global.elements.actions_listbox.selected_index
+    local index = storage.elements.actions_listbox.selected_index
     if index > 0 then
-        local action = global.actions[index]
+        local action = storage.actions[index]
         if action.highlight_box_bounds then
             local surface = game.get_surface(1)
             local highlight_box = surface and surface.create_entity{
@@ -266,20 +266,20 @@ local function update_highlight_box()
                 position = {0, 0}, -- ignored
                 bounding_box = action.highlight_box_bounds,
             } or nil
-            global.current_highlight_box = highlight_box
+            storage.current_highlight_box = highlight_box
         end
     end
 end
 
-local function ezr_action_to_string(action)
+local function ftg_action_to_string(action)
     local function make_string(info)
         local x = info.position and string.format("%.2f", info.position.x) or ""
         local y = info.position and string.format("%.2f", info.position.y) or ""
         local units = info.units and (tonumber(info.units) and string.format("%.2f", info.units) or info.units) or ""
         local size = info.size and string.format("%d", info.size) or ""
         local amount = info.amount and string.format("%d", info.amount) or ""
-        local colour = global.elements.settings.color_export.textfield.text or ""
-        return string.format("%s;%s;%s;%s;%s;%s;%s;%s;%s;;%s;%s;", info.task, x, y, units, info.item or "", info.orientation or "", info.direction or "", size, amount, colour, info.modifier or "")
+        local colour = storage.elements.settings.color_export.textfield.text or ""
+        return string.format("%s;%s;%s;%s;%s;%s;;%s;%s;", info.task, x, y, units, info.item or "", info.orientation or "", colour, info.modifier or "")
     end
 
     if action.type == "put" then
@@ -289,9 +289,6 @@ local function ezr_action_to_string(action)
             units = action.count == 0 and "All" or action.count,
             item = localised_item_names_en[action.item_name],
             orientation = action.inventory,
-            direction = ezr_build_orientation_names[action.direction or defines.direction.north],
-            size = action.size or 1,
-            amount = action.amount or 1,
             modifier = action.modifier,
         }
     elseif action.type == "take" then
@@ -301,9 +298,6 @@ local function ezr_action_to_string(action)
             units = action.count == 0 and "All" or action.count,
             item = localised_item_names_en[action.item_name],
             orientation = action.inventory,
-            direction = ezr_build_orientation_names[action.direction or defines.direction.north],
-            size = action.size or 1,
-            amount = action.amount or 1,
             modifier = action.modifier,
         }
     elseif action.type == "build" then
@@ -311,12 +305,7 @@ local function ezr_action_to_string(action)
             task = "Build",
             position = action.position,
             item = localised_entity_names_en[action.entity_name],
-            -- EZR always expects a direction even if the entity doesn't support direction.
-            -- It uses north by default
-            orientation = ezr_build_orientation_names[action.orientation or defines.direction.north],
-            direction = ezr_build_orientation_names[action.direction or defines.direction.north],
-            size = action.size or 1,
-            amount = action.amount or 1,
+            orientation = ftg_build_orientation_names[action.orientation or defines.direction.north],
         }
     elseif action.type == "rotate" then
         return make_string{
@@ -324,9 +313,6 @@ local function ezr_action_to_string(action)
             position = action.position,
             units = action.is_clockwise and 1 or 3,
             item = localised_entity_names_en[action.entity_name],
-            direction = "North",
-            size = 1,
-            amount = 1,
         }
     elseif action.type == "research" then
         return make_string{
@@ -353,9 +339,6 @@ local function ezr_action_to_string(action)
             task = "Recipe",
             position = action.position,
             item = localised_recipe_names_en[action.recipe_name],
-            direction = "North",
-            size = 1,
-            amount = 1,
         }
     elseif action.type == "set_limit" then
         return make_string{
@@ -363,23 +346,18 @@ local function ezr_action_to_string(action)
             position = action.position,
             units = action.limit,
             orientation = "Chest",
-            direction = "North",
-            size = 1,
-            amount = 1,
         }
     elseif action.type == "set_input_priority" then
         return make_string{
             task = "Priority",
             position = action.position,
             orientation = string.format("%s,%s", action.input_priority, action.output_priority or "None"),
-            direction = "North",
         }
     elseif action.type == "set_output_priority" then
         return make_string{
             task = "Priority",
             position = action.position,
             orientation = string.format("%s,%s", action.input_priority or "None", action.output_priority),
-            direction = "North",
         }
     elseif action.type == "set_splitter_filter" then
         return make_string{
@@ -387,7 +365,6 @@ local function ezr_action_to_string(action)
             position = action.position,
             units = "1.0",
             item = localised_item_names_en[action.item_name],
-            direction = "North",
         }
     elseif action.type == "set_filter_mode" then
         return make_string{
@@ -395,7 +372,6 @@ local function ezr_action_to_string(action)
             position = action.position,
             units = action.slot_index,
             item = localised_item_names_en[action.item_name],
-            direction = "North",
         }
     elseif action.type == "set_filter_slot" then
         return make_string{
@@ -403,9 +379,6 @@ local function ezr_action_to_string(action)
             position = action.position,
             units = action.slot_index,
             item = localised_item_names_en[action.item_name],
-            direction = "North",
-            size = 1,
-            amount = 1,
         }
     elseif action.type == "walk" then
         return make_string{
@@ -442,7 +415,7 @@ end
 -- and returns the new action and description if merging (otherwise returns nils)
 local function try_merging_actions(prev_action, action)
     --no previous action or combine is turned off
-    if prev_action == nil or global.elements.settings.combine_actions.state == false then
+    if prev_action == nil or storage.elements.settings.combine_actions.state == false then
         return "add"
 
     --combine walk
@@ -543,7 +516,7 @@ local function try_merging_actions(prev_action, action)
             end
         end
 
-        if size  * amount > tonumber(global.elements.settings.max_build_size.textfield.text) then
+        if size  * amount > tonumber(storage.elements.settings.max_build_size.textfield.text) then
             return "add"
         end
         local new_description = action.type == "build" and {"tas_helper.description_build", amount, entity_to_string(prev_action.entity)}
@@ -575,11 +548,11 @@ local function add_action(description, action, force_add)
     -- does nothing if not currently recording
     -- description is a LocalisedString
     
-    if not global.recording and force_add ~= true then
+    if not storage.recording and force_add ~= true then
         return
     end
 
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
 
     -- If no item is selected (somehow) then append action to the end of the list
     if listbox.selected_index == 0 then
@@ -587,28 +560,28 @@ local function add_action(description, action, force_add)
     end
 
     -- If 'always add to end' checkbox is ticked, then add to end
-    if global.elements.settings.always_add_to_end.state then
+    if storage.elements.settings.always_add_to_end.state then
         listbox.selected_index = #listbox.items
     end
 
     local index = listbox.selected_index
 
-    local prev_action = index > 0 and global.actions[index] or nil
+    local prev_action = index > 0 and storage.actions[index] or nil
     prev_action = not force_add and prev_action or nil
     local what_to_do, new_description, new_action = try_merging_actions(prev_action, action)
     new_description = new_description or description
 
     if what_to_do == "delete" then
         listbox.remove_item(index)
-        table.remove(global.actions, index)
+        table.remove(storage.actions, index)
         listbox.selected_index = index > 1 and index - 1 or (#listbox.items == 0 and 0 or 1)
     elseif what_to_do == "merge" then
         listbox.set_item(index, new_description)
-        global.actions[index] = new_action
+        storage.actions[index] = new_action
         listbox.selected_index = index
     else
         listbox.add_item(description, index + 1)
-        table.insert(global.actions, index + 1, action)
+        table.insert(storage.actions, index + 1, action)
         listbox.selected_index = index + 1
     end
     listbox.scroll_to_item(listbox.selected_index)
@@ -616,15 +589,15 @@ local function add_action(description, action, force_add)
 end
 
 local function handle_toggle_recording()
-    local element = global.elements.buttons_flow.start_stop_recording_button
-    global.recording = not global.recording
-    element.caption = global.recording and stop_recording_text or start_recording_text
-    element.tooltip = global.recording and {"tas_helper.pause_tooltip"} or {"tas_helper.record_tooltip"}
-    element.style = global.recording and "tas_helper_button_selected" or "button"
+    local element = storage.elements.buttons_flow.start_stop_recording_button
+    storage.recording = not storage.recording
+    element.caption = storage.recording and stop_recording_text or start_recording_text
+    element.tooltip = storage.recording and {"tas_helper.pause_tooltip"} or {"tas_helper.record_tooltip"}
+    element.style = storage.recording and "tas_helper_button_selected" or "button"
 end
 
 local function handle_prev()
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
     if listbox.selected_index > 1 then
         listbox.selected_index = listbox.selected_index - 1
         listbox.scroll_to_item(listbox.selected_index)
@@ -633,7 +606,7 @@ local function handle_prev()
 end
 
 local function handle_next()
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
     if listbox.selected_index < #listbox.items then
         listbox.selected_index = listbox.selected_index + 1
         listbox.scroll_to_item(listbox.selected_index)
@@ -646,13 +619,13 @@ local function table_swap(table, i, j)
 end
 
 local function handle_move_up()
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
     local i = listbox.selected_index
     if i > 1 then
         local tmp = listbox.get_item(i-1)
         listbox.set_item(i-1, listbox.get_item(i))
         listbox.set_item(i, tmp)
-        table_swap(global.actions, i-1, i)
+        table_swap(storage.actions, i-1, i)
         listbox.selected_index = i-1
         listbox.scroll_to_item(listbox.selected_index)
         update_highlight_box()
@@ -660,13 +633,13 @@ local function handle_move_up()
 end
 
 local function handle_move_down()
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
     local i = listbox.selected_index
     if i < #listbox.items then
         local tmp = listbox.get_item(i+1)
         listbox.set_item(i+1, listbox.get_item(i))
         listbox.set_item(i, tmp)
-        table_swap(global.actions, i, i+1)
+        table_swap(storage.actions, i, i+1)
         listbox.selected_index = i+1
         listbox.scroll_to_item(listbox.selected_index)
         update_highlight_box()
@@ -674,14 +647,14 @@ local function handle_move_down()
 end
 
 local function handle_delete()
-    local listbox = global.elements.actions_listbox
+    local listbox = storage.elements.actions_listbox
 
     if listbox.selected_index == 0 then
         return
     end
 
     local index = listbox.selected_index
-    table.remove(global.actions, index)
+    table.remove(storage.actions, index)
     listbox.remove_item(index)
     listbox.selected_index = index > 1 and index - 1 or (#listbox.items == 0 and 0 or 1)
     listbox.scroll_to_item(listbox.selected_index)
@@ -694,16 +667,16 @@ script.on_init(function()
     end
 
     -- list of recorded actions
-    global.actions = {}
+    storage.actions = {}
 
     -- last player.opened entity
-    global.last_opened = {
+    storage.last_opened = {
         entity = nil,
         info = nil,
     }
 
     -- current highlight box entity (on currently selected action)
-    global.current_highlight_box = nil
+    storage.current_highlight_box = nil
 end)
 
 script.on_configuration_changed(function(event)
@@ -712,7 +685,7 @@ end)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function (event)
     local prefix = "tas_step_planner_action_"
-    for action,element in pairs(global.action_types) do
+    for action,element in pairs(storage.action_types) do
         local setting = prefix..action
         if event.setting == setting then
             element.state = settings.global[setting].value
@@ -729,22 +702,22 @@ end)
 script.on_event(defines.events.on_player_main_inventory_changed, function(event)
     local player = game.get_player(1)
     local inventory = player.get_main_inventory()
-    global.main_inventory_contents = inventory.get_contents()
+    storage.main_inventory_contents = inventory.get_contents()
 end)
 
 script.on_event(defines.events.on_player_cursor_stack_changed, function(event)
     local player = game.get_player(1)
     local item_stack = player.cursor_stack
-    global.cursor_stack_contents = item_stack.valid_for_read and { name = item_stack.name, count = item_stack.count } or nil
+    storage.cursor_stack_contents = item_stack.valid_for_read and { name = item_stack.name, count = item_stack.count } or nil
 end)
 
 script.on_event(defines.events.on_player_toggled_map_editor, function(event)
     -- when the player toggles editor mode, their inventory and cursor stack change
     local player = game.get_player(1)
     local inventory = player.get_main_inventory()
-    global.main_inventory_contents = inventory.get_contents()
+    storage.main_inventory_contents = inventory.get_contents()
     local item_stack = player.cursor_stack
-    global.cursor_stack_contents = item_stack.valid_for_read and { name = item_stack.name, count = item_stack.count } or nil
+    storage.cursor_stack_contents = item_stack.valid_for_read and { name = item_stack.name, count = item_stack.count } or nil
 end)
 
 local function ingredients_contains(ingredients, item_name)
@@ -759,16 +732,16 @@ end
 ---@param event EventData.on_player_fast_transferred
 local function handle_fast_transfer_from_player(event)
     local player = game.get_player(1)
-    if player == nil or not global.elements.settings.capture_put.state then return end
+    if player == nil or not storage.elements.settings.capture_put.state then return end
     local entity = event.entity
 
     -- count total amount of item in cursor and main inventory before and after transfer
-    local prev_cursor_contents = global.cursor_stack_contents
+    local prev_cursor_contents = storage.cursor_stack_contents
     if not prev_cursor_contents then
         game.print("Error: fast transfer from player to entity but nothing recorded in cursor stack")
         return
     end
-    local prev_inventory_contents = global.main_inventory_contents
+    local prev_inventory_contents = storage.main_inventory_contents
     local item_name = prev_cursor_contents.name
     local prev_count = prev_cursor_contents.count + (prev_inventory_contents ~= nil and prev_inventory_contents[item_name] or 0)
 
@@ -787,17 +760,17 @@ local function handle_fast_transfer_from_player(event)
     end
 
     -- check 'always put amount' settings
-    local always_put_amount = event.is_split and global.elements.settings.always_put_half or global.elements.settings.always_put_amount
+    local always_put_amount = event.is_split and storage.elements.settings.always_put_half or storage.elements.settings.always_put_amount
     if always_put_amount.checkbox.state then
         transfer_count = tonumber(always_put_amount.textfield.text) or 0
     end
 
     local inventory = nil
     -- TODO: remove/optimise usages of game.item_prototypes
-    if entity.get_fuel_inventory() and game.item_prototypes[item_name].fuel_category then
+    if entity.get_fuel_inventory() and prototypes.item[item_name].fuel_category then
         inventory = "Fuel"
     elseif entity.type == "lab" then
-        if game.item_prototypes[item_name].type == "module" then
+        if prototypes.item[item_name].type == "module" then
             inventory = "Modules"
         else
             inventory = "Input"
@@ -855,24 +828,31 @@ end
 ---@param event EventData.on_player_fast_transferred
 local function handle_fast_transfer_to_player(event)
     local player = game.get_player(1)
-    if player == nil or not global.elements.settings.capture_take.state then return end
+    if player == nil or not storage.elements.settings.capture_take.state then return end
     local entity = event.entity
 
     local main_inventory = player.get_main_inventory()
-    local prev = global.main_inventory_contents
     if not main_inventory then return end
+    local main_inventory_contents = main_inventory.get_contents()
+
+    local prev = storage.main_inventory_contents
 
     local modifier
-    if entity.type == "car" then --TODO handle other vehicles
+    if entity.type == "car" then --TODO vehicle has been removed
         modifier = "vehicle"
     end
 
-    for item_name, count in pairs(main_inventory.get_contents()) do
-        local prev_count = prev ~= nil and prev[item_name] or 0
-        if count > prev_count then
-            local transfer_count = count - prev_count
+    for index, item in pairs(main_inventory_contents) do
+        local prev_count = 0
+        for prev_index, prev_item in pairs(prev) do
+            if prev_item.name == item.name then
+                prev_count = prev_item.count
+            end
+        end
+        if item.count > prev_count then
+            local transfer_count = item.count - prev_count
 
-            local always_take_amount = event.is_split and global.elements.settings.always_take_half or global.elements.settings.always_take_amount
+            local always_take_amount = event.is_split and storage.elements.settings.always_take_half or storage.elements.settings.always_take_amount
             if always_take_amount.checkbox.state then
                 transfer_count = tonumber(always_take_amount.textfield.text) or 0
             end
@@ -885,20 +865,15 @@ local function handle_fast_transfer_to_player(event)
                 -- and EZR converts "Input" on lab to defines.inventory.lab_input
                 inventory = "Input"
             elseif entity.type == "beacon" then
-                -- Beacon output inventory is defines.inventory.beacon_modules but EZR doesn't handle
-                -- beacon module inventory correctly so you have to use Wreck instead (which maps to the
-                -- same integer as beacon_modules)
-                inventory = "Wreck"
-            elseif chest_list[entity.name] ~= nil then
-                inventory = "Chest"
+                inventory = "Modules"
             elseif entity.type == "container" or entity.type == "logistic-container" then
                 -- EZR doesn't allow you to take from 'Chest' unless it's one of the standard chests
-                inventory = "Wreck"
+                inventory = chest_list[entity.name] ~= nil and "Chest" or "Wreck"
+            elseif entity.get_output_inventory() == entity.get_inventory(defines.inventory.assembling_machine_output) then
+                inventory = "Output"
             elseif entity.get_output_inventory() == entity.get_inventory(defines.inventory.assembling_machine_input) then
                 -- not sure if this ever triggers
                 inventory = "Input"
-            elseif entity.get_output_inventory() == entity.get_inventory(defines.inventory.assembling_machine_output) then
-                inventory = "Output"
             elseif entity.get_output_inventory() == entity.get_inventory(defines.inventory.assembling_machine_modules) then
                 -- not sure if this triggers either
                 inventory = "Modules"
@@ -909,21 +884,21 @@ local function handle_fast_transfer_to_player(event)
 
             if inventory then
                 local transfer_count_description = transfer_count == 0 and "all" or transfer_count .. " x"
-                add_action({"tas_helper.description_take", transfer_count_description, item_name, entity_to_string(entity)}, {
+                add_action({"tas_helper.description_take", transfer_count_description, item.name, entity_to_string(entity)}, {
                     type = "take",
                     position = entity.position,
                     entity = entity,
-                    item_name = item_name,
+                    item_name = item.name,
                     count = transfer_count,
                     inventory = inventory,
                     modifier = modifier,
                     highlight_box_bounds = entity.selection_box,
                 })
             else
-                game.print("Error: Couldn't identify correct inventory when exporting action 'Take' with entity " .. entity.name .. " and item " .. item_name)
+                game.print("Error: Couldn't identify correct inventory when exporting action 'Take' with entity " .. entity.name .. " and item " .. item.name)
             end
-        elseif count < prev_count then
-            game.print("Error: player lost item " .. item_name .. " during fast transfer from entity to player")
+        elseif item.count < prev_count then
+            game.print("Error: player lost item " .. item.name .. " during fast transfer from entity to player")
         end
     end
 end
@@ -937,13 +912,13 @@ script.on_event(defines.events.on_player_fast_transferred, function(event)
 end)
 
 script.on_event(defines.events.on_built_entity, function(event)
-    local entity = event.created_entity
+    local entity = event.entity
     if entity.type == "entity-ghost" then
-        global.ghosts = global.ghosts or {}
-        table.insert(global.ghosts, entity)
+        storage.ghosts = storage.ghosts or {}
+        table.insert(storage.ghosts, entity)
         return
     end
-    if not global.elements.settings.capture_build.state then return end
+    if not storage.elements.settings.capture_build.state then return end
 
     local dir = entity.supports_direction and entity.direction or nil
     local suffix = "underground-belt"
@@ -961,7 +936,7 @@ script.on_event(defines.events.on_built_entity, function(event)
     })
 
     --UPGRADE ghost ->
-    local recipe = global.elements.settings.capture_recipe.state and entity.type == "assembling-machine" and entity.get_recipe()
+    local recipe = storage.elements.settings.capture_recipe.state and entity.type == "assembling-machine" and entity.get_recipe()
     if recipe then
         local keyword = recipe and {"tas_helper.keyword_set_recipe", recipe.name} or {"tas_helper.keyword_clear_recipe"}
         add_action({"tas_helper.description_set_setting", keyword, entity_to_string(entity)}, {
@@ -972,7 +947,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         })
     end
 
-    local inventory = global.elements.settings.capture_limit.state and entity.type == "container" and entity.get_inventory(defines.inventory.chest)
+    local inventory = storage.elements.settings.capture_limit.state and entity.type == "container" and entity.get_inventory(defines.inventory.chest)
     if inventory and inventory.supports_bar() then
         local bar = inventory.get_bar()
         if bar < #entity.get_output_inventory() + 1 then
@@ -986,7 +961,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         end
     end
 
-    if global.elements.settings.capture_splitter.state and entity.type == "splitter" and
+    if storage.elements.settings.capture_splitter.state and entity.type == "splitter" and
         entity.splitter_input_priority ~= "none" and entity.splitter_output_priority ~= "none"
     then
         add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_input_priority"}, entity_to_string(entity)}, {
@@ -999,7 +974,7 @@ script.on_event(defines.events.on_built_entity, function(event)
         })
     end
 
-    if global.elements.settings.capture_filter_inserter.state and (entity.type == "splitter" or entity.type == "inserter" and entity.inserter_filter_mode)
+    if storage.elements.settings.capture_filter_inserter.state and (entity.type == "splitter" or entity.type == "inserter" and entity.inserter_filter_mode)
     then
         if entity.type == "splitter" and entity.splitter_filter then
             add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_filter"}, entity_to_string(entity)}, {
@@ -1035,7 +1010,7 @@ script.on_event(defines.events.on_built_entity, function(event)
 end)
 
 script.on_event(defines.events.on_player_changed_position, function(event)
-    if not game or not global.recording then return end
+    if not game or not storage.recording then return end
     local player = game.players[event.player_index]
     if not player or not player.character then return end
     local position = player.position
@@ -1043,12 +1018,12 @@ script.on_event(defines.events.on_player_changed_position, function(event)
     if player.cursor_stack and player.cursor_stack.valid and player.cursor_stack.valid_for_read then
         cur_item_name, cur_item_count = player.cursor_stack.name, player.cursor_stack.count
     end
-    global.ghosts = global.ghosts or {}
+    storage.ghosts = storage.ghosts or {}
 
-    if global.elements.settings.capture_ghost.state then
-        for index, entity in pairs(global.ghosts) do
+    if storage.elements.settings.capture_ghost.state then
+        for index, entity in pairs(storage.ghosts) do
             if not entity.valid then
-                table.remove(global.ghosts, index)
+                table.remove(storage.ghosts, index)
             else
                 local dist = math.sqrt((math.abs(entity.position.x - player.position.x) - (entity.bounding_box.right_bottom.x-entity.bounding_box.left_top.x))^2 + (math.abs(entity.position.y - player.position.y) - (entity.bounding_box.right_bottom.y-entity.bounding_box.left_top.y))^2)
                 if dist < 10 and player.can_reach_entity(entity) then
@@ -1057,7 +1032,7 @@ script.on_event(defines.events.on_player_changed_position, function(event)
                     if player.can_build_from_cursor{position = entity.position, direction = entity.direction} and
                         player.build_from_cursor{position = entity.position, direction = inv and (entity.direction + 4) % 8 or entity.direction}
                     then
-                        table.remove(global.ghosts, index)
+                        table.remove(storage.ghosts, index)
                         break
                     end
                 end
@@ -1066,7 +1041,7 @@ script.on_event(defines.events.on_player_changed_position, function(event)
         if cur_item_name then player.cursor_stack.set_stack({name = cur_item_name, count = cur_item_count}) else player.cursor_stack.clear() end
     end
 
-    if global.elements and not global.elements.settings.capture_walk.state then
+    if storage.elements and not storage.elements.settings.capture_walk.state then
         return
     end
 
@@ -1080,7 +1055,7 @@ end)
 
 script.on_event(defines.events.on_player_rotated_entity, function(event)
     local entity = event.entity
-    if entity.type == "entity-ghost" or not global.elements.settings.capture_rotate.state then
+    if entity.type == "entity-ghost" or not storage.elements.settings.capture_rotate.state then
         return
     end
 
@@ -1092,13 +1067,13 @@ script.on_event(defines.events.on_player_rotated_entity, function(event)
         type = "rotate",
         position = entity.position,
         is_clockwise = is_clockwise,
-        entity_name = entity.name, -- necessary for ezr
+        entity_name = entity.name, -- necessary for ftg
         highlight_box_bounds = entity.selection_box,
     })
 end)
 
 script.on_event(defines.events.on_research_started, function(event)
-    if not global.elements.settings.capture_research.state then
+    if not storage.elements.settings.capture_research.state then
         return
     end
     local research = event.research
@@ -1109,7 +1084,7 @@ script.on_event(defines.events.on_research_started, function(event)
 end)
 
 script.on_event(defines.events.on_pre_player_crafted_item, function(event)
-    if not global.elements.settings.capture_craft.state then
+    if not storage.elements.settings.capture_craft.state then
         return
     end
 
@@ -1125,27 +1100,27 @@ end)
 script.on_event(defines.events.on_player_mined_entity, function(event)
     local entity = event.entity
     if entity.type == "entity-ghost" then
-        for _,ent in pairs(global.ghosts or {}) do
-            if ent == entity then table.remove(global.ghosts, _) end
+        for _,ent in pairs(storage.ghosts or {}) do
+            if ent == entity then table.remove(storage.ghosts, _) end
         end
 
         return
     end
-    if not global.elements.settings.capture_mine.state then return end
+    if not storage.elements.settings.capture_mine.state then return end
 
     local mining_time = entity.prototype.mineable_properties.mining_time
     add_action({"tas_helper.description_mine", entity_to_string(entity)}, {
         type = "mine",
         position = entity.position,
         mining_time = mining_time,
-        entity_name = entity.name, -- sometimes necessary for ezr
+        entity_name = entity.name, -- sometimes necessary for ftg
         fast_replace_group = entity.prototype.fast_replaceable_group,
         highlight_box_bounds = entity.selection_box,
     })
 end)
 
 script.on_event(defines.events.on_player_dropped_item, function (event)
-    if not global.elements.settings.capture_mine.state then return end
+    if not storage.elements.settings.capture_mine.state then return end
     local item = event.entity
     add_action({"tas_helper.description_drop", item.stack.name, position_to_string(item.position)}, {
         type = "drop",
@@ -1157,7 +1132,7 @@ script.on_event(defines.events.on_player_dropped_item, function (event)
 end)
 
 script.on_event(defines.events.on_player_driving_changed_state, function(event)
-    if not global.elements.settings.capture_enter.state then return end
+    if not storage.elements.settings.capture_enter.state then return end
     local _player, vehicle = game.get_player(event.player_index), event.entity
     if not vehicle or not _player then return end
     local vehicle_string = vehicle and "[item="..vehicle.name.."]" or "vehicle"
@@ -1169,12 +1144,12 @@ script.on_event(defines.events.on_player_driving_changed_state, function(event)
 end)
 
 script.on_event(defines.events.on_player_ammo_inventory_changed, function(event)
-    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    if not storage.elements.settings.capture_equip.state then return end --todo capture equip
     local _player = game.get_player(event.player_index)
     if not _player or not _player.character then return end
     local inventory = _player.character.get_inventory(defines.inventory.character_ammo)
-    if not global.ammo then
-        global.ammo = {
+    if not storage.ammo then
+        storage.ammo = {
             inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0},
             inventory[2].valid_for_read and {name = inventory[2].name, count = inventory[2].count} or {name = "none", count = 0},
             inventory[3].valid_for_read and {name = inventory[3].name, count = inventory[3].count} or {name = "none", count = 0},
@@ -1185,9 +1160,9 @@ script.on_event(defines.events.on_player_ammo_inventory_changed, function(event)
     for index = 1, 3 do
         local slot = inventory[index]
         if slot.valid_for_read then
-            if slot.name ~= global.ammo[index].name or
-                slot.count > global.ammo[index].count or
-                slot.count < global.ammo[index].count - 1 -- event triggers on shooting a full mag, so this prevents triggering on shooting
+            if slot.name ~= storage.ammo[index].name or
+                slot.count > storage.ammo[index].count or
+                slot.count < storage.ammo[index].count - 1 -- event triggers on shooting a full mag, so this prevents triggering on shooting
             then
                 add_action({"tas_helper.description_equip", slot.name, "ammo"..index, slot.count}, {
                     type = "equip",
@@ -1196,10 +1171,10 @@ script.on_event(defines.events.on_player_ammo_inventory_changed, function(event)
                     orientation = "Ammo "..index,
                 })
             end
-            global.ammo[index].name = slot.name
-            global.ammo[index].count = slot.count
+            storage.ammo[index].name = slot.name
+            storage.ammo[index].count = slot.count
         else
-            if global.ammo[index].name ~= "none" then
+            if storage.ammo[index].name ~= "none" then
                 add_action({"tas_helper.description_unequip", "ammo"..index}, {
                     type = "equip",
                     item_name = "",
@@ -1207,19 +1182,19 @@ script.on_event(defines.events.on_player_ammo_inventory_changed, function(event)
                     orientation = "Ammo "..index,
                 })
             end
-            global.ammo[index].name = "none"
-            global.ammo[index].count = 0
+            storage.ammo[index].name = "none"
+            storage.ammo[index].count = 0
         end
     end
 end)
 
 script.on_event(defines.events.on_player_gun_inventory_changed, function(event)
-    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    if not storage.elements.settings.capture_equip.state then return end --todo capture equip
     local _player = game.get_player(event.player_index)
     if not _player or not _player.character then return end
     local inventory = _player.character.get_inventory(defines.inventory.character_guns)
-    if not global.weapon then
-        global.weapon = {
+    if not storage.weapon then
+        storage.weapon = {
             inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0},
             inventory[2].valid_for_read and {name = inventory[2].name, count = inventory[2].count} or {name = "none", count = 0},
             inventory[3].valid_for_read and {name = inventory[3].name, count = inventory[3].count} or {name = "none", count = 0},
@@ -1231,8 +1206,8 @@ script.on_event(defines.events.on_player_gun_inventory_changed, function(event)
     for index = 1, 3 do
         local slot = inventory[index]
         if slot.valid_for_read then
-            if slot.name ~= global.weapon[index].name or
-                slot.count ~= global.weapon[index].count
+            if slot.name ~= storage.weapon[index].name or
+                slot.count ~= storage.weapon[index].count
             then
                 add_action({"tas_helper.description_equip", slot.name, "weapon"..index, slot.count}, {
                     type = "equip",
@@ -1241,10 +1216,10 @@ script.on_event(defines.events.on_player_gun_inventory_changed, function(event)
                     orientation = "Weapon "..index,
                 })
             end
-            global.weapon[index].name = slot.name
-            global.weapon[index].count = slot.count
+            storage.weapon[index].name = slot.name
+            storage.weapon[index].count = slot.count
         else
-            if global.weapon[index].name ~= "none" then
+            if storage.weapon[index].name ~= "none" then
                 add_action({"tas_helper.description_unequip", "weapon"..index}, {
                     type = "equip",
                     item_name = "",
@@ -1252,26 +1227,26 @@ script.on_event(defines.events.on_player_gun_inventory_changed, function(event)
                     orientation = "Weapon "..index,
                 })
             end
-            global.weapon[index].name = "none"
-            global.weapon[index].count = 0
+            storage.weapon[index].name = "none"
+            storage.weapon[index].count = 0
         end
     end
 end)
 
 script.on_event(defines.events.on_player_armor_inventory_changed, function(event)
-    if not global.elements.settings.capture_equip.state then return end --todo capture equip
+    if not storage.elements.settings.capture_equip.state then return end --todo capture equip
     local _player = game.get_player(event.player_index)
     if not _player or not _player.character then return end
     local inventory = _player.character.get_inventory(defines.inventory.character_armor)
-    if not global.armor then
-        global.armor = inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0}
+    if not storage.armor then
+        storage.armor = inventory[1].valid_for_read and {name = inventory[1].name, count = inventory[1].count} or {name = "none", count = 0}
         return
     end
     local slot = inventory[1]
     if slot.valid_for_read then
-        if slot.name ~= global.armor.name or
-            slot.count > global.armor.count or
-            slot.count < global.armor.count - 1
+        if slot.name ~= storage.armor.name or
+            slot.count > storage.armor.count or
+            slot.count < storage.armor.count - 1
         then
             add_action({"tas_helper.description_equip", slot.name, "armor", slot.count}, {
                 type = "equip",
@@ -1280,10 +1255,10 @@ script.on_event(defines.events.on_player_armor_inventory_changed, function(event
                 orientation = "Armor",
             })
         end
-        global.armor.name = slot.name
-        global.armor.count = slot.count
+        storage.armor.name = slot.name
+        storage.armor.count = slot.count
     else
-        if global.armor.name ~= "none" then
+        if storage.armor.name ~= "none" then
             add_action({"tas_helper.description_unequip", "armor"}, {
                 type = "equip",
                 item_name = "",
@@ -1291,8 +1266,8 @@ script.on_event(defines.events.on_player_armor_inventory_changed, function(event
                 orientation = "Armor",
             })
         end
-        global.armor.name = "none"
-        global.armor.count = 0
+        storage.armor.name = "none"
+        storage.armor.count = 0
     end
 end)
 
@@ -1314,7 +1289,7 @@ end
 
 local function check_for_setting_changes(entity, last_info, info)
     -- check for certain changes on 'entity' using the previous settings ('last_info') and the new settings ('info')
-    if info.recipe and info.recipe ~= last_info.recipe and global.elements.settings.capture_recipe.state then
+    if info.recipe and info.recipe ~= last_info.recipe and storage.elements.settings.capture_recipe.state then
         local keyword = info.recipe and {"tas_helper.keyword_set_recipe", info.recipe} or {"tas_helper.keyword_clear_recipe"}
         add_action({"tas_helper.description_set_setting", keyword, entity_to_string(entity)}, {
             type = "set_recipe",
@@ -1324,7 +1299,7 @@ local function check_for_setting_changes(entity, last_info, info)
             highlight_box_bounds = entity.selection_box,
         })
     end
-    if info.bar and info.bar ~= last_info.bar and global.elements.settings.capture_limit.state  then
+    if info.bar and info.bar ~= last_info.bar and storage.elements.settings.capture_limit.state  then
         local unlimited = info.bar == #entity.get_output_inventory() + 1
         local keyword = unlimited and {"tas_helper.keyword_remove_limit"} or {"tas_helper.keyword_set_limit", info.bar - 1}
         add_action({"tas_helper.description_set_setting", keyword, entity_to_string(entity)}, {
@@ -1338,7 +1313,7 @@ local function check_for_setting_changes(entity, last_info, info)
     -- TODO: Add more info to descriptions for these actions
     if info.splitter then
         assert(last_info.splitter)
-        if info.splitter.input_priority ~= last_info.splitter.input_priority and global.elements.settings.capture_splitter.state then
+        if info.splitter.input_priority ~= last_info.splitter.input_priority and storage.elements.settings.capture_splitter.state then
             add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_input_priority"}, entity_to_string(entity)}, {
                 type = "set_input_priority",
                 position = entity.position,
@@ -1348,7 +1323,7 @@ local function check_for_setting_changes(entity, last_info, info)
                 highlight_box_bounds = entity.selection_box,
             })
         end
-        if info.splitter.output_priority ~= last_info.splitter.output_priority and global.elements.settings.capture_splitter.state then
+        if info.splitter.output_priority ~= last_info.splitter.output_priority and storage.elements.settings.capture_splitter.state then
             add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_output_priority"}, entity_to_string(entity)}, {
                 type = "set_output_priority",
                 position = entity.position,
@@ -1358,7 +1333,7 @@ local function check_for_setting_changes(entity, last_info, info)
                 highlight_box_bounds = entity.selection_box,
             })
         end
-        if info.splitter.filter ~= last_info.splitter.filter and global.elements.settings.capture_filter_inserter.state then
+        if info.splitter.filter ~= last_info.splitter.filter and storage.elements.settings.capture_filter_inserter.state then
             add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_filter"}, entity_to_string(entity)}, {
                 type = "set_splitter_filter",
                 entity = entity,
@@ -1368,7 +1343,7 @@ local function check_for_setting_changes(entity, last_info, info)
             })
         end
     end
-    if info.inserter_filter and global.elements.settings.capture_filter_inserter.state then
+    if info.inserter_filter and storage.elements.settings.capture_filter_inserter.state then
         assert(last_info.inserter_filter)
         if info.inserter_filter.mode ~= last_info.inserter_filter.mode then
             add_action({"tas_helper.description_set_setting", {"tas_helper.keyword_set_filter_mode"}, entity_to_string(entity)}, {
@@ -1403,12 +1378,12 @@ script.on_event(defines.events.on_tick, function(event)
     local entity = player.opened and player.opened.object_name == "LuaEntity" and player.opened or nil
     local info = get_entity_info(entity)
 
-    if entity and entity == global.last_opened.entity then
-        local last_info = global.last_opened.info
+    if entity and entity == storage.last_opened.entity then
+        local last_info = storage.last_opened.info
         check_for_setting_changes(entity, last_info, info)
     end
 
-    global.last_opened = {
+    storage.last_opened = {
         entity = entity,
         info = info,
     }
@@ -1436,10 +1411,10 @@ end
 
 -- returns number of lines
 local function do_export_to_textbox()
-    local export_textbox = global.elements.export_textbox
+    local export_textbox = storage.elements.export_textbox
     local lines = {}
-    for _, action in pairs(global.actions) do
-        local string = ezr_action_to_string(action)
+    for _, action in pairs(storage.actions) do
+        local string = ftg_action_to_string(action)
         if string then
             table.insert(lines, string)
         end
@@ -1458,7 +1433,7 @@ local function handle_open_dialog(frame)
 
     local settings_window_width = 290
 
-    local location = global.elements.main_frame.location
+    local location = storage.elements.main_frame.location
     if location.x + math.floor((gui_width + settings_window_width) * player.display_scale) < player.display_resolution.width then
         -- position settings to the right of the helper window
         location.x = location.x + math.floor(gui_width * player.display_scale)
@@ -1466,7 +1441,7 @@ local function handle_open_dialog(frame)
         -- position settings to the left
         location.x = location.x - math.floor(settings_window_width * player.display_scale)
     end
-    global.elements.settings_frame.location = location
+    storage.elements.settings_frame.location = location
 end
 
 local function handle_close_dialog(frame)
@@ -1486,7 +1461,7 @@ local function handle_toggle_dialog(frame)
 end
 
 local function handle_toggle_gui()
-    local main_frame = global.elements.main_frame
+    local main_frame = storage.elements.main_frame
     main_frame.visible = not main_frame.visible
     if main_frame.visible then
         main_frame.bring_to_front()
@@ -1497,30 +1472,30 @@ local function handle_toggle_gui()
     player.set_shortcut_toggled("tas_helper_toggle_gui", main_frame.visible)
     settings.global.tas_step_planner_open = {value = main_frame.visible}
 
-    handle_close_dialog(global.elements.export_frame)
-    handle_close_dialog(global.elements.settings_frame)
+    handle_close_dialog(storage.elements.export_frame)
+    handle_close_dialog(storage.elements.settings_frame)
 end
 
-local function handle_export_ezr()
+local function handle_export_ftg()
     local num_lines = do_export_to_textbox()
-    handle_open_dialog(global.elements.export_frame)
-    local textbox = global.elements.export_textbox
+    handle_open_dialog(storage.elements.export_frame)
+    local textbox = storage.elements.export_textbox
     textbox.focus()
     textbox.select_all()
 end
 
 script.on_event(defines.events.on_gui_closed, function(event)
     local element = event.element
-    if element == global.elements.export_frame then
+    if element == storage.elements.export_frame then
         handle_close_dialog(element)
-    elseif element == global.elements.settings_frame then
+    elseif element == storage.elements.settings_frame then
         handle_close_dialog(element)
     end
 end)
 
 script.on_event(defines.events.on_gui_click, function(event)
     local element = event.element
-    local buttons_flow = global.elements.buttons_flow
+    local buttons_flow = storage.elements.buttons_flow
     if element == buttons_flow.start_stop_recording_button then
         handle_toggle_recording()
     elseif element == buttons_flow.prev_button then
@@ -1535,28 +1510,28 @@ script.on_event(defines.events.on_gui_click, function(event)
         handle_delete()
     elseif element == buttons_flow.add_walk_action_button then
         handle_add_walk_action()
-    elseif element == buttons_flow.export_ezr_button then
-        handle_export_ezr()
-    elseif element == global.elements.toggle_options_button then
-        handle_toggle_dialog(global.elements.settings_frame)
-    elseif element == global.elements.close_button then
+    elseif element == buttons_flow.export_ftg_button then
+        handle_export_ftg()
+    elseif element == storage.elements.toggle_options_button then
+        handle_toggle_dialog(storage.elements.settings_frame)
+    elseif element == storage.elements.close_button then
         handle_toggle_gui()
-    elseif element == global.elements.export_frame_close_button then
-        handle_close_dialog(global.elements.export_frame)
-    elseif element == global.elements.settings_frame_close_button then
-        handle_close_dialog(global.elements.settings_frame)
-    elseif element == global.elements.export_frame.buttons.select_all_button then
-        local textbox = global.elements.export_textbox
+    elseif element == storage.elements.export_frame_close_button then
+        handle_close_dialog(storage.elements.export_frame)
+    elseif element == storage.elements.settings_frame_close_button then
+        handle_close_dialog(storage.elements.settings_frame)
+    elseif element == storage.elements.export_frame.buttons.select_all_button then
+        local textbox = storage.elements.export_textbox
         textbox.focus()
         textbox.select_all()
-    elseif element == global.elements.export_frame.buttons.ok then
-        handle_close_dialog(global.elements.export_frame)
+    elseif element == storage.elements.export_frame.buttons.ok then
+        handle_close_dialog(storage.elements.export_frame)
     end
 end)
 
 script.on_event(defines.events.on_gui_text_changed, function(event)
     local prefix = "tas_step_planner_other_"
-    for setting, element in pairs(global.other_types) do
+    for setting, element in pairs(storage.other_types) do
         if event.element == element then
             settings.global[prefix..setting] = {value = element.text}
             return
@@ -1566,7 +1541,7 @@ end)
 
 script.on_event(defines.events.on_gui_checked_state_changed, function(event)
     do -- Update GUI
-        local settings, element = global.elements.settings, event.element
+        local settings, element = storage.elements.settings, event.element
         if not element then
             -- Do nothing
         elseif element == settings.always_put_amount.checkbox then
@@ -1582,7 +1557,7 @@ script.on_event(defines.events.on_gui_checked_state_changed, function(event)
 
     do -- Update settings
         local prefix = "tas_step_planner_action_"
-        for action, element in pairs(global.action_types) do
+        for action, element in pairs(storage.action_types) do
             if event.element == element then
                 settings.global[prefix..action] = {value = element.state}
                 return
@@ -1590,7 +1565,7 @@ script.on_event(defines.events.on_gui_checked_state_changed, function(event)
         end
 
         prefix = "tas_step_planner_other_"
-        for setting, element in pairs(global.other_types) do
+        for setting, element in pairs(storage.other_types) do
             if event.element == element then
                 settings.global[prefix..setting] = {value = element.state}
                 return
@@ -1601,7 +1576,7 @@ end)
 
 local has_main_frame_moved = nil
 script.on_event(defines.events.on_gui_location_changed, function (event)
-    if event.element == global.elements.main_frame then
+    if event.element == storage.elements.main_frame then
         has_main_frame_moved = {x = event.element.location.x, y = event.element.location.y}
     end
 end)
@@ -1616,13 +1591,13 @@ end)
 
 script.on_event(defines.events.on_gui_selection_state_changed, function(event)
     local element = event.element
-    if element == global.elements.actions_listbox then
+    if element == storage.elements.actions_listbox then
         update_highlight_box()
     end
 end)
 
 script.on_event("tas_helper_toggle_gui", handle_toggle_gui)
-script.on_event("tas_helper_export", handle_export_ezr)
+script.on_event("tas_helper_export", handle_export_ftg)
 script.on_event("tas_helper_toggle_recording", function()
     local player = game.get_player(1)
     player.play_sound{ path = "utility/gui_click", }

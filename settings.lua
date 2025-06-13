@@ -250,7 +250,7 @@ data:extend(
             type = "int-setting",
             name = prefix_other.."max_build_size",
             setting_type = "runtime-global",
-            default_value = true,
+            default_value = 6,
             order = "o8",
             hidden = true,
         },
