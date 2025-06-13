@@ -205,12 +205,6 @@ local function build_gui()
         
         settings.add{ type = "checkbox", caption = "Combine related actions [img=info]", tooltip = "When adding an action, merge it with the previous action if possible.\nFor example, crafting the same item twice will be merged and mining then building belt (which happens automatically when belt dragging and rotating) will be merged.", state = setting("combine_actions"), name = "combine_actions", }
 
-        settings.add{ type = "flow", direction = "horizontal", name = "max_build_size", }
-        settings.max_build_size.add{ type = "label", caption = "Max build size [img=info]: ", tooltip = "The size in tiles, used for multibuild", name = "label" }
-        settings.max_build_size.add{ type = "empty-widget", }.style.horizontally_stretchable = true
-        settings.max_build_size.add{ type = "textfield", style = "very_short_number_textfield", text = setting("max_build_size"), numeric = true, name = "textfield", }
-        settings.max_build_size.textfield.style.horizontal_align = "right"
-
         settings.add{ type = "flow", direction = "horizontal", name = "color_export", }
         settings.color_export.add{ type = "label", caption = "Export colour [img=info]: ", tooltip = "Export colour of steps. Acceptable formats are [<name:Red>, <rgb:rgb(255,0,132)> or <hex:#00ffa1>]", state = true, name = "label" }
         settings.color_export.add{ type = "empty-widget", }.style.horizontally_stretchable = true
@@ -246,7 +240,6 @@ local function build_gui()
         always_take_half_amount_bool = storage.elements.settings.always_take_half.checkbox,
         always_take_half_amount_value = storage.elements.settings.always_take_half.textfield,
         combine_actions = storage.elements.settings.combine_actions,
-        max_build_size = storage.elements.settings.max_build_size.textfield,
         color_export = storage.elements.settings.color_export.textfield,
     }
 end
@@ -464,77 +457,6 @@ local function try_merging_actions(prev_action, action)
             highlight_box_bounds = {{action.position.x - 0.5, action.position.y - 0.5}, {action.position.x + 0.5, action.position.y + 0.5}},
             input_priority = action.input_priority,
             output_priority = action.output_priority,
-        }
-        return "merge", new_description, new_action
-
-    --merge multibuild
-    elseif  prev_action.type == action.type and -- same type
-        ((action.type == "build" and prev_action.orientation == action.orientation and prev_action.entity_name == action.entity_name) or --either build or put/take
-        ((action.type == "put" or action.type == "take") and prev_action.count == action.count and prev_action.item_name == action.item_name and prev_action.inventory == action.inventory))
-        and
-            (prev_action.position.x == action.position.x and prev_action.position.y ~= action.position.y or --different position in only one axis
-            prev_action.position.x ~= action.position.x and prev_action.position.y == action.position.y)
-    then
-        local direction, size, amount, highlight_box_bounds = defines.direction.north, 1, 1, util.copy(prev_action.highlight_box_bounds)
-        if prev_action.position.x ~= action.position.x then
-            if not prev_action.direction then --new merge
-                direction = prev_action.position.x < action.position.x and defines.direction.east or defines.direction.west
-                size = math.abs(prev_action.position.x - action.position.x)
-                amount = 2
-                highlight_box_bounds[direction == defines.direction.west and "left_top" or "right_bottom"].x = 
-                    highlight_box_bounds[direction == defines.direction.west and "left_top" or "right_bottom"].x + (direction == defines.direction.west and -size or size)
-            elseif --old merge
-                (prev_action.direction == defines.direction.east or prev_action.direction == defines.direction.west) and
-                prev_action.position.x + prev_action.size * prev_action.amount * (prev_action.direction == defines.direction.east and 1 or -1) == action.position.x
-            then
-                direction = prev_action.direction
-                size = prev_action.size
-                amount = prev_action.amount + 1
-                highlight_box_bounds[direction == defines.direction.west and "left_top" or "right_bottom"].x = 
-                    highlight_box_bounds[direction == defines.direction.west and "left_top" or "right_bottom"].x + (direction == defines.direction.west and -size or size)
-            else
-                return "add"
-            end
-        else
-            if not prev_action.direction then --new merge
-                direction = prev_action.position.y < action.position.y and defines.direction.south or defines.direction.north
-                size = math.abs(prev_action.position.y - action.position.y)
-                amount = 2
-                highlight_box_bounds[direction == defines.direction.north and "left_top" or "right_bottom"].y = 
-                    highlight_box_bounds[direction == defines.direction.north and "left_top" or "right_bottom"].y + (direction == defines.direction.north and -size or size)
-            elseif --old merge
-                (prev_action.direction == defines.direction.south or prev_action.direction == defines.direction.north) and
-                prev_action.position.y + prev_action.size * prev_action.amount * (prev_action.direction == defines.direction.south and 1 or -1) == action.position.y
-            then
-                direction = prev_action.direction
-                size = prev_action.size
-                amount = prev_action.amount + 1
-                highlight_box_bounds[direction == defines.direction.north and "left_top" or "right_bottom"].y = 
-                    highlight_box_bounds[direction == defines.direction.north and "left_top" or "right_bottom"].y + (direction == defines.direction.north and -size or size)
-            else
-                return "add"
-            end
-        end
-
-        if size  * amount > tonumber(storage.elements.settings.max_build_size.textfield.text) then
-            return "add"
-        end
-        local new_description = action.type == "build" and {"tas_helper.description_build", amount, entity_to_string(prev_action.entity)}
-            or {"tas_helper.description_"..action.type, action.count == 0 and "all" or action.count .. " x", action.item_name, entity_to_string(prev_action.entity)}
-        local new_action = {
-            type = action.type,
-            position = prev_action.position,
-            highlight_box_bounds = highlight_box_bounds,
-            entity_name = prev_action.entity_name,
-            entity = prev_action.entity,
-            fast_replace_group = prev_action.fast_replace_group,
-            orientation = prev_action.orientation,
-            direction = direction,
-            size = size,
-            amount = amount,
-            count = action.count,
-            item_name = action.item_name,
-            inventory = action.inventory,
         }
         return "merge", new_description, new_action
 
