@@ -269,8 +269,6 @@ local function ftg_action_to_string(action)
         local x = info.position and string.format("%.2f", info.position.x) or ""
         local y = info.position and string.format("%.2f", info.position.y) or ""
         local units = info.units and (tonumber(info.units) and string.format("%.2f", info.units) or info.units) or ""
-        local size = info.size and string.format("%d", info.size) or ""
-        local amount = info.amount and string.format("%d", info.amount) or ""
         local colour = storage.elements.settings.color_export.textfield.text or ""
         return string.format("%s;%s;%s;%s;%s;%s;;%s;%s;", info.task, x, y, units, info.item or "", info.orientation or "", colour, info.modifier or "")
     end
@@ -325,7 +323,7 @@ local function ftg_action_to_string(action)
             units = action.mining_time * 60 * 2 + 5, -- assume starting mining speed of 0.5 and add 5 for safety
             -- EZR only displays the entity being mined if it is a building
             -- TODO: remove entity_prototypes access
-            item = game.entity_prototypes[action.entity_name].items_to_place_this and localised_entity_names_en[action.entity_name] or nil
+            item = prototypes.entity[action.entity_name].items_to_place_this and localised_entity_names_en[action.entity_name] or nil
         }
     elseif action.type == "set_recipe" then
         return make_string{
@@ -977,8 +975,8 @@ script.on_event(defines.events.on_player_rotated_entity, function(event)
     end
 
     local previous_direction = event.previous_direction
-    local rotation_amount = (entity.direction + 8 - previous_direction) % 8
-    local is_clockwise = rotation_amount == 2
+    local rotation_amount = (entity.direction + 16 - previous_direction) % 16
+    local is_clockwise = rotation_amount == 4
     local rotation_direction_img = is_clockwise and "tas_helper_rotate_clockwise" or "tas_helper_rotate_anticlockwise"
     add_action({"tas_helper.description_rotate", rotation_direction_img, entity_to_string(entity)}, {
         type = "rotate",

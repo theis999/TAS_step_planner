@@ -126,7 +126,9 @@ data.raw.shortcut["tas_helper_toggle_gui"] = {
     localised_name = {"tas_helper.toggle_gui"},
     associated_control_input = "tas_helper_toggle_gui",
     icon = "__TAS_step_planner__/graphics/notebook.png",
+    icon_size = 256,
     small_icon = "__TAS_step_planner__/graphics/notebook.png",
+    small_icon_size = 256,
 }
 
 -- Hotkeys
